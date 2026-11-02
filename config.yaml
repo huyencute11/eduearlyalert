@@ -1,0 +1,70 @@
+# =============================================================================
+# EduEarlyAlert – cấu hình dùng chung cho cả nhóm.
+# MỌI tham số phân tích nằm ở đây. Không hard-code trong src/.
+# Đổi tham số = commit file này kèm lý do trong commit message.
+# =============================================================================
+
+project:
+  name: EduEarlyAlert
+  seed: 42
+
+paths:
+  raw_dir: data/raw                 # 7 file CSV của OULAD (không commit)
+  db_path: data/interim/oulad.duckdb
+  interim_dir: data/interim
+  processed_dir: data/processed
+  reports_dir: reports
+  figures_dir: reports/figures
+  kg_dir: kg
+  audit_log: reports/audit_log.jsonl
+
+# --- Phạm vi phân tích -------------------------------------------------------
+# Chọn module có đủ 4 lượt giảng dạy (BBB, DDD, FFF...) để chia theo thời gian.
+# Chạy `python -m eduearlyalert.pipeline audit` để xem bảng module × presentation
+# rồi mới chốt.
+scope:
+  module: BBB
+  presentations:
+    train: [2013B, 2013J]
+    valid: [2014B]                  # dùng để chọn ngưỡng, KHÔNG dùng test
+    test: [2014J]                   # chỉ đụng tới 1 lần ở cuối
+
+# --- Mốc dự báo --------------------------------------------------------------
+timeline:
+  cutoff_day: 41                    # hết Tuần 6 (ngày 0..41)
+  week_length: 7
+  include_pre_start: true           # có tính hoạt động VLE ở ngày âm không
+  early_window: [1, 3]              # dùng cho feature "sụt giảm tương tác"
+  late_window: [4, 6]
+
+# --- Nhãn --------------------------------------------------------------------
+label:
+  positive_results: [Fail, Withdrawn]       # y = 1  (không hoàn thành)
+  negative_results: [Pass, Distinction]     # y = 0
+
+# --- Fairness Gate -----------------------------------------------------------
+# Các cột dưới đây KHÔNG BAO GIỜ được vào ma trận feature.
+# Chỉ dùng để audit ở AQ9 (fairness.py).
+fairness:
+  sensitive_attributes: [gender, region, disability, age_band, imd_band, highest_education]
+  min_group_size: 10                # nhóm nhỏ hơn bị gộp/ẩn trong báo cáo
+
+# --- Tiêu chí chấp nhận mô hình (KHÔNG phải KPI tổ chức) ---------------------
+acceptance:
+  recall_min: 0.80
+  f1_min: 0.75
+
+# --- Ràng buộc nguồn lực (ASSUMPTION – cần xác nhận) -------------------------
+advisor:
+  k_per_advisor: 35
+  n_advisors: 2
+  alert_shares: [0.10, 0.20, 0.30]  # AQ12: cảnh báo top 10/20/30%
+  tiers:                            # phân tầng theo phân vị risk score
+    very_high: 0.90
+    high: 0.75
+
+# --- Knowledge Graph (DỮ LIỆU MÔ PHỎNG) --------------------------------------
+kg:
+  concept_map: kg/concept_map.csv
+  concepts: kg/concepts.yaml
+  pass_threshold: 40                # điểm < 40 coi là "chưa đạt" ở concept

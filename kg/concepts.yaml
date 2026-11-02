@@ -1,0 +1,40 @@
+# =============================================================================
+# KNOWLEDGE GRAPH – DỮ LIỆU MÔ PHỎNG (SYNTHETIC)
+# Nhóm 3 tự xây dựng để minh hoạ ánh xạ Concept–CLO–Resource.
+# KHÔNG phải chương trình đào tạo thật của Open University hay của trường.
+# Không được diễn giải kết quả AQ6/AQ11 như thể đây là dữ liệu thật.
+# =============================================================================
+provenance: "synthetic – Nhóm 3 tự xây dựng, tham khảo cấu trúc CLO của một môn nhập môn KHXH mẫu"
+
+clos:
+  CLO1: Trình bày được các khái niệm và thuật ngữ nền tảng của môn học
+  CLO2: Vận dụng được phương pháp thu thập và đọc hiểu bằng chứng
+  CLO3: Phân tích và lập luận dựa trên dữ liệu/tình huống
+  CLO4: Trình bày bài viết học thuật có cấu trúc và trích dẫn
+
+concepts:
+  C01: {name: Thuật ngữ và khái niệm nền tảng, clo: [CLO1]}
+  C02: {name: Các quan điểm lý thuyết chính, clo: [CLO1, CLO3]}
+  C03: {name: Đọc hiểu nguồn tài liệu học thuật, clo: [CLO2]}
+  C04: {name: Phương pháp thu thập dữ liệu, clo: [CLO2]}
+  C05: {name: Đọc biểu đồ và số liệu cơ bản, clo: [CLO2, CLO3]}
+  C06: {name: Lập luận dựa trên bằng chứng, clo: [CLO3]}
+  C07: {name: Cấu trúc bài luận học thuật, clo: [CLO4]}
+  C08: {name: Trích dẫn và liêm chính học thuật, clo: [CLO4]}
+
+prerequisites:          # concept A là tiền đề của concept B
+  - [C01, C02]
+  - [C03, C06]
+  - [C05, C06]
+  - [C07, C08]
+
+resources:
+  R01: {title: "Bài giảng tuần 1 – Thuật ngữ cốt lõi (video 15')", concepts: [C01]}
+  R02: {title: "Bảng tóm tắt các quan điểm lý thuyết", concepts: [C02]}
+  R03: {title: "Hướng dẫn đọc một bài báo khoa học", concepts: [C03]}
+  R04: {title: "Tutorial: khảo sát, phỏng vấn, quan sát", concepts: [C04]}
+  R05: {title: "Bài tập tự luyện đọc biểu đồ", concepts: [C05]}
+  R06: {title: "Workshop: từ bằng chứng đến lập luận", concepts: [C06, C05]}
+  R07: {title: "Mẫu dàn ý bài luận + ví dụ có chấm điểm", concepts: [C07]}
+  R08: {title: "Hướng dẫn trích dẫn APA và tránh đạo văn", concepts: [C08]}
+  R09: {title: "Buổi tutoring nhóm nhỏ – ôn tập nửa đầu môn", concepts: [C01, C02, C05]}

@@ -1,0 +1,29 @@
+# --- Dữ liệu: KHÔNG commit (dung lượng + governance) ---
+data/raw/*
+data/interim/*
+data/processed/*
+!data/**/.gitkeep
+*.duckdb
+*.parquet
+*.joblib
+
+# --- Output sinh tự động: commit có chọn lọc khi nộp bài (xem docs/06_team_workflow.md) ---
+reports/audit_log.jsonl
+reports/risk_list.csv
+reports/risk_list_decisions.csv
+
+# --- Bí mật ---
+.env
+
+# --- Python / công cụ ---
+__pycache__/
+*.py[cod]
+*.egg-info/
+.venv/
+venv/
+.pytest_cache/
+.ipynb_checkpoints/
+.ruff_cache/
+.DS_Store
+.vscode/
+.idea/
