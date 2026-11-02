@@ -1,0 +1,41 @@
+subject,predicate,object,provenance
+C01,SUPPORTS,CLO1,"synthetic – Nhóm 3 tự xây dựng, tham khảo cấu trúc CLO của một môn nhập môn KHXH mẫu"
+C01,PREREQUISITE_OF,C02,"synthetic – Nhóm 3 tự xây dựng, tham khảo cấu trúc CLO của một môn nhập môn KHXH mẫu"
+C02,SUPPORTS,CLO1,"synthetic – Nhóm 3 tự xây dựng, tham khảo cấu trúc CLO của một môn nhập môn KHXH mẫu"
+C02,SUPPORTS,CLO3,"synthetic – Nhóm 3 tự xây dựng, tham khảo cấu trúc CLO của một môn nhập môn KHXH mẫu"
+C03,SUPPORTS,CLO2,"synthetic – Nhóm 3 tự xây dựng, tham khảo cấu trúc CLO của một môn nhập môn KHXH mẫu"
+C03,PREREQUISITE_OF,C06,"synthetic – Nhóm 3 tự xây dựng, tham khảo cấu trúc CLO của một môn nhập môn KHXH mẫu"
+C04,SUPPORTS,CLO2,"synthetic – Nhóm 3 tự xây dựng, tham khảo cấu trúc CLO của một môn nhập môn KHXH mẫu"
+C05,SUPPORTS,CLO2,"synthetic – Nhóm 3 tự xây dựng, tham khảo cấu trúc CLO của một môn nhập môn KHXH mẫu"
+C05,SUPPORTS,CLO3,"synthetic – Nhóm 3 tự xây dựng, tham khảo cấu trúc CLO của một môn nhập môn KHXH mẫu"
+C05,PREREQUISITE_OF,C06,"synthetic – Nhóm 3 tự xây dựng, tham khảo cấu trúc CLO của một môn nhập môn KHXH mẫu"
+C06,SUPPORTS,CLO3,"synthetic – Nhóm 3 tự xây dựng, tham khảo cấu trúc CLO của một môn nhập môn KHXH mẫu"
+C07,SUPPORTS,CLO4,"synthetic – Nhóm 3 tự xây dựng, tham khảo cấu trúc CLO của một môn nhập môn KHXH mẫu"
+C07,PREREQUISITE_OF,C08,"synthetic – Nhóm 3 tự xây dựng, tham khảo cấu trúc CLO của một môn nhập môn KHXH mẫu"
+C08,SUPPORTS,CLO4,"synthetic – Nhóm 3 tự xây dựng, tham khảo cấu trúc CLO của một môn nhập môn KHXH mẫu"
+R01,COVERS,C01,"synthetic – Nhóm 3 tự xây dựng, tham khảo cấu trúc CLO của một môn nhập môn KHXH mẫu"
+R02,COVERS,C02,"synthetic – Nhóm 3 tự xây dựng, tham khảo cấu trúc CLO của một môn nhập môn KHXH mẫu"
+R03,COVERS,C03,"synthetic – Nhóm 3 tự xây dựng, tham khảo cấu trúc CLO của một môn nhập môn KHXH mẫu"
+R04,COVERS,C04,"synthetic – Nhóm 3 tự xây dựng, tham khảo cấu trúc CLO của một môn nhập môn KHXH mẫu"
+R05,COVERS,C05,"synthetic – Nhóm 3 tự xây dựng, tham khảo cấu trúc CLO của một môn nhập môn KHXH mẫu"
+R06,COVERS,C06,"synthetic – Nhóm 3 tự xây dựng, tham khảo cấu trúc CLO của một môn nhập môn KHXH mẫu"
+R06,COVERS,C05,"synthetic – Nhóm 3 tự xây dựng, tham khảo cấu trúc CLO của một môn nhập môn KHXH mẫu"
+R07,COVERS,C07,"synthetic – Nhóm 3 tự xây dựng, tham khảo cấu trúc CLO của một môn nhập môn KHXH mẫu"
+R08,COVERS,C08,"synthetic – Nhóm 3 tự xây dựng, tham khảo cấu trúc CLO của một môn nhập môn KHXH mẫu"
+R09,COVERS,C01,"synthetic – Nhóm 3 tự xây dựng, tham khảo cấu trúc CLO của một môn nhập môn KHXH mẫu"
+R09,COVERS,C02,"synthetic – Nhóm 3 tự xây dựng, tham khảo cấu trúc CLO của một môn nhập môn KHXH mẫu"
+R09,COVERS,C05,"synthetic – Nhóm 3 tự xây dựng, tham khảo cấu trúc CLO của một môn nhập môn KHXH mẫu"
+BBB:CMA1,ASSESSES,C01,synthetic
+BBB:CMA1,ASSESSES,C02,synthetic
+BBB:TMA1,ASSESSES,C03,synthetic
+BBB:TMA1,ASSESSES,C07,synthetic
+BBB:TMA1,ASSESSES,C08,synthetic
+BBB:CMA2,ASSESSES,C04,synthetic
+BBB:CMA2,ASSESSES,C05,synthetic
+BBB:TMA2,ASSESSES,C05,synthetic
+BBB:TMA2,ASSESSES,C06,synthetic
+BBB:TMA2,ASSESSES,C07,synthetic
+BBB:CMA3,ASSESSES,C02,synthetic
+BBB:CMA3,ASSESSES,C06,synthetic
+BBB:TMA3,ASSESSES,C06,synthetic
+BBB:TMA3,ASSESSES,C08,synthetic

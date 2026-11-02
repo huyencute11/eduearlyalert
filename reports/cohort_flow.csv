@@ -1,0 +1,5 @@
+code_presentation,split,registered,withdrawn_by_cutoff,registered_after_cutoff,prediction_population,positive_rate_all,positive_rate_prediction_pop
+2013B,train,400,38,0,362,0.507,0.456
+2013J,train,400,37,0,363,0.455,0.399
+2014B,valid,400,40,0,360,0.528,0.475
+2014J,test,400,37,0,363,0.448,0.391

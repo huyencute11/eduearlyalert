@@ -74,3 +74,54 @@ def test_threshold_selector_updates_kpi(app, pipeline_done):
     at.select_slider(key="alert_share").set_value(float(shares.iloc[-1])).run()
     assert not at.exception
     assert at.metric[4].value != first
+
+
+# ---- Advisor: Risk List + human validation gate ----------------------------
+def _audit_lines(cfg) -> list[dict]:
+    log = cfg.path("audit_log")
+    return [json.loads(x) for x in log.read_text(encoding="utf-8").splitlines()] if log.exists() else []
+
+
+def test_advisor_shows_risk_list_table_and_detail(app):
+    at = _switch(app, "Advisor")
+    assert not at.exception
+    assert len(at.dataframe) >= 1
+    assert at.selectbox(key="case_pid").value is not None
+    assert len(at.get("plotly_chart")) >= 1  # AQ10
+
+
+def test_advisor_approval_writes_audit_log_and_decision(app, pipeline_done):
+    import pandas as pd
+
+    at = _switch(app, "Advisor")
+    pid = at.selectbox(key="case_pid").value
+    before = len(_audit_lines(pipeline_done))
+    at.text_area(key=f"note_{pid}").input("Đã trao đổi với GV").run()
+    at.button(key=f"ok_{pid}").click().run()
+    assert not at.exception
+    logs = _audit_lines(pipeline_done)
+    assert len(logs) == before + 1
+    assert logs[-1]["action"] == "risk_list_approved" and logs[-1]["pid"] == pid
+    dec = pd.read_csv(pipeline_done.path("reports_dir") / "risk_list_decisions.csv", dtype=str)
+    row = dec[dec["pid"] == pid].iloc[0]
+    assert row["status"] == "approved" and row["decision_note"] == "Đã trao đổi với GV"
+    # Risk List gốc do pipeline sinh vẫn luôn pending_review
+    rl = pd.read_csv(pipeline_done.path("reports_dir") / "risk_list.csv")
+    assert (rl["status"] == "pending_review").all()
+
+
+def test_advisor_requires_reviewer_name(app, pipeline_done):
+    at = _switch(app, "Advisor")
+    at.sidebar.text_input[0].input("   ").run()
+    pid = at.selectbox(key="case_pid").value
+    before = len(_audit_lines(pipeline_done))
+    at.button(key=f"skip_{pid}").click().run()
+    assert len(_audit_lines(pipeline_done)) == before
+    assert any("Cần nhập tên người duyệt" in e.value for e in at.error)
+
+
+def test_advisor_search_filter(app):
+    at = _switch(app, "Advisor")
+    at.text_input(key="rl_query").input("không-tồn-tại-xyz").run()
+    assert not at.exception
+    assert any("Không có ca nào" in i.value for i in at.info)

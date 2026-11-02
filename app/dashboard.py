@@ -27,7 +27,6 @@ from eduearlyalert.governance import audit  # noqa: E402
 
 cfg = load_config()
 REPORTS = cfg.path("reports_dir")
-FIG = cfg.path("figures_dir")
 DECISIONS = REPORTS / "risk_list_decisions.csv"
 
 st.set_page_config(page_title="EduEarlyAlert", page_icon="🎓", layout="wide")
@@ -38,12 +37,6 @@ def need(path: Path) -> bool:
         st.warning(f"Chưa có `{path.relative_to(cfg.root)}`. Chạy `python -m eduearlyalert.pipeline all` trước.")
         return False
     return True
-
-
-def show_fig(name: str, caption: str = "") -> None:
-    p = FIG / name
-    if p.exists():
-        st.image(str(p), caption=caption, width="stretch")
 
 
 # ---- biểu đồ tương tác (Plotly) -------------------------------------------
@@ -507,6 +500,192 @@ def eda_view() -> None:
             st.caption("⚠️ Ánh xạ concept là DỮ LIỆU MÔ PHỎNG (kg/), ở mức bài đánh giá, không phải mức câu hỏi.")
 
 
+# ---- Advisor: Risk List + human validation gate ---------------------------
+STATUS_LABEL = {"pending_review": "⏳ Chờ duyệt", "approved": "✅ Đã duyệt liên hệ",
+                "dismissed": "⏭️ Bỏ qua", "contacted": "📞 Đã liên hệ"}
+TIERS = ["Rất cao", "Cao", "Theo dõi"]
+TEXT_COLS = ["reasons", "concepts_need_support", "suggested_resources", "suggested_support",
+             "status", "reviewed_by", "decision_note"]
+DECISION_COLS = ["status", "reviewed_by", "decision_note"]
+
+
+def load_risk_list() -> pd.DataFrame:
+    """Risk List (reports/risk_list.csv) gộp với quyết định đã ghi (risk_list_decisions.csv)."""
+    rl = pd.read_csv(REPORTS / "risk_list.csv", dtype=dict.fromkeys(TEXT_COLS, str))
+    rl[TEXT_COLS] = rl[TEXT_COLS].fillna("")
+    if DECISIONS.exists():
+        dec = pd.read_csv(DECISIONS, dtype=str).fillna("")
+        rl = rl.drop(columns=DECISION_COLS).merge(dec[["pid", *DECISION_COLS]], on="pid", how="left")
+        rl[DECISION_COLS] = rl[DECISION_COLS].fillna("")
+    rl["status"] = rl["status"].replace("", "pending_review")
+    return rl
+
+
+def record_decision(pid: str, action: str, reviewer: str, note: str) -> None:
+    """Ghi quyết định của cố vấn (một dòng/pid) và audit log. Không gửi gì cho sinh viên."""
+    if action not in STATUS_LABEL or action == "pending_review":
+        raise ValueError(f"Hành động không hợp lệ: {action}")
+    row = pd.DataFrame([{"pid": pid, "status": action, "reviewed_by": reviewer.strip(), "decision_note": note.strip()}])
+    old = pd.read_csv(DECISIONS, dtype=str) if DECISIONS.exists() else pd.DataFrame(columns=row.columns)
+    pd.concat([old[old["pid"] != pid], row], ignore_index=True).to_csv(DECISIONS, index=False)
+    audit(cfg, f"risk_list_{action}", pid=pid, reviewer=reviewer.strip(), note=note.strip())
+
+
+def decision_history(pid: str) -> list[dict]:
+    """Các lần duyệt của một ca, đọc từ audit_log.jsonl (mới nhất trước)."""
+    log = cfg.path("audit_log")
+    if not log.exists():
+        return []
+    rows = []
+    for line in log.read_text(encoding="utf-8").splitlines():
+        try:
+            r = json.loads(line)
+        except json.JSONDecodeError:
+            continue  # bỏ qua dòng hỏng để dashboard không sập; file log giữ nguyên
+        if r.get("pid") == pid and str(r.get("action", "")).startswith("risk_list_"):
+            rows.append(r)
+    return rows[::-1]
+
+
+def bullets(items: list[str]) -> str:
+    return "\n".join(f"- {x.strip()}" for x in items if x.strip())
+
+
+def strategy_chart(d: pd.DataFrame) -> go.Figure:
+    """AQ10 · Coverage@K và Precision@K của các phương án ưu tiên."""
+    fig = go.Figure()
+    for i, (col, label) in enumerate([("coverage_at_K", "Coverage@K"), ("precision_at_K", "Precision@K")]):
+        fig.add_bar(name=label, x=d["strategy"], y=d[col], marker_color=SERIES[i],
+                    hovertemplate="%{y:.1%}<extra>" + label + "</extra>")
+    fig.update_layout(barmode="group", title=f"AQ10 · So sánh phương án ưu tiên (K = {int(d['K'].iloc[0])})")
+    return style(fig, y_pct=True)
+
+
+def case_detail(r: pd.Series, reviewer: str) -> None:
+    """Panel chi tiết một ca + nút quyết định (human-in-the-loop)."""
+    pid = r["pid"]
+    st.subheader(f"#{r['rank']} · {pid}")
+    st.caption(f"Lượt {r['code_presentation']} · ưu tiên **{r['tier']}** · risk score {r['risk_score']:.2f} · "
+               f"{STATUS_LABEL.get(r['status'], r['status'])}")
+    st.progress(min(max(float(r["risk_score"]), 0.0), 1.0))
+    st.markdown("**Lý do (tín hiệu dữ liệu, không phải nguyên nhân):**")
+    st.markdown(bullets(r["reasons"].split(" | ")))
+    if r["concepts_need_support"]:
+        st.markdown("**Concept cần hỗ trợ thêm** (KG mô phỏng):")
+        st.markdown(bullets(r["concepts_need_support"].replace("), ", ")|").split("|")))
+    if r["suggested_resources"]:
+        with st.expander("Tài nguyên gợi ý"):
+            st.markdown(bullets(r["suggested_resources"].replace(", R", "|R").split("|")))
+    st.markdown(f"**Loại hỗ trợ đề xuất:** {r['suggested_support']}")
+    if r["reviewed_by"]:
+        st.caption(f"Lần duyệt gần nhất: {r['reviewed_by']} – {r['decision_note'] or '(không ghi chú)'}")
+
+    note = st.text_area("Ghi chú quyết định", key=f"note_{pid}", value=r["decision_note"], height=80,
+                        placeholder="Bối cảnh, lý do chọn, việc cần làm tiếp…")
+    b1, b2, b3 = st.columns(3)
+    action = None
+    if b1.button("✅ Phê duyệt liên hệ", key=f"ok_{pid}", type="primary", width="stretch"):
+        action = "approved"
+    if b2.button("⏭️ Bỏ qua", key=f"skip_{pid}", width="stretch"):
+        action = "dismissed"
+    if b3.button("📞 Đã liên hệ", key=f"done_{pid}", width="stretch"):
+        action = "contacted"
+    if action:
+        if not reviewer.strip():
+            st.error("Cần nhập tên người duyệt ở sidebar trước khi ghi quyết định.")
+        else:
+            record_decision(pid, action, reviewer, note)
+            st.toast(f"Đã ghi {STATUS_LABEL[action]} cho {pid}")
+            st.rerun()
+
+    hist = decision_history(pid)
+    if hist:
+        with st.expander(f"Lịch sử duyệt ({len(hist)})"):
+            h = pd.DataFrame(hist).reindex(columns=["ts", "reviewer", "action", "note"])
+            st.dataframe(h, hide_index=True, width="stretch")
+
+
+def advisor_view(reviewer: str) -> None:
+    """Advisor: Risk List có lý do + phê duyệt từng ca; mọi quyết định ghi audit_log.jsonl."""
+    st.header("Danh sách đề xuất hỗ trợ (Risk List)")
+    st.info("Đây là **đề xuất**, không phải kết luận về sinh viên. Hãy đọc lý do, cân nhắc bối cảnh và chọn "
+            "Phê duyệt / Bỏ qua cho từng ca. Không có tin nhắn nào được gửi tự động.")
+    if not need(REPORTS / "risk_list.csv"):
+        return
+    rl = load_risk_list()
+    adv = cfg["advisor"]
+    counts = rl["status"].value_counts()
+    pending = int(counts.get("pending_review", 0))
+    k1, k2, k3, k4 = st.columns(4, border=True)
+    k1.metric("Số ca đề xuất", len(rl), help=f"Năng lực giả định {adv['n_advisors']} cố vấn × "
+                                              f"{adv['k_per_advisor']} ca/tuần (assumption của proposal).")
+    k2.metric("Chờ duyệt", pending)
+    k3.metric("Đã duyệt liên hệ", int(counts.get("approved", 0)))
+    k4.metric("Đã liên hệ / bỏ qua", f"{int(counts.get('contacted', 0))} / {int(counts.get('dismissed', 0))}")
+    st.progress(1 - pending / max(len(rl), 1), text=f"Tiến độ duyệt: {len(rl) - pending}/{len(rl)} ca")
+
+    present_tiers = [t for t in TIERS if t in set(rl["tier"])]
+    f1, f2, f3, f4 = st.columns([2, 3, 2, 3])
+    tiers = f1.multiselect("Mức ưu tiên", present_tiers, default=present_tiers, key="rl_tier")
+    status = f2.multiselect("Trạng thái", list(STATUS_LABEL), default=["pending_review", "approved"],
+                            format_func=STATUS_LABEL.get, key="rl_status")
+    pres = f3.multiselect("Lượt", sorted(rl["code_presentation"].unique()), key="rl_pres", placeholder="Tất cả")
+    query = f4.text_input("Tìm pid / concept / lý do", key="rl_query", placeholder="vd: C02, chưa nộp")
+
+    view = rl[rl["tier"].isin(tiers) & rl["status"].isin(status)]
+    if pres:
+        view = view[view["code_presentation"].isin(pres)]
+    if query.strip():
+        hay = (view["pid"] + " " + view["reasons"] + " " + view["concepts_need_support"]).str.lower()
+        view = view[hay.str.contains(query.strip().lower(), regex=False)]
+    view = view.sort_values("rank").reset_index(drop=True)
+
+    left, right = st.columns([3, 2], gap="large")
+    with left:
+        st.caption(f"{len(view)} / {len(rl)} ca hiển thị · bấm một dòng để xem chi tiết")
+        table = view.assign(status_label=view["status"].map(STATUS_LABEL),
+                            n_reasons=[len([x for x in s.split(" | ") if x]) for s in view["reasons"]])
+        event = st.dataframe(
+            table[["rank", "pid", "code_presentation", "risk_score", "tier", "status_label", "n_reasons",
+                   "suggested_support"]],
+            hide_index=True, width="stretch", height=420, key="rl_table",
+            on_select="rerun", selection_mode="single-row",
+            column_config={
+                "rank": st.column_config.NumberColumn("#", width="small"),
+                "pid": st.column_config.TextColumn("Mã ẩn danh"),
+                "code_presentation": st.column_config.TextColumn("Lượt", width="small"),
+                "risk_score": st.column_config.ProgressColumn("Risk score", min_value=0, max_value=1, format="%.2f"),
+                "tier": st.column_config.TextColumn("Ưu tiên", width="small"),
+                "status_label": st.column_config.TextColumn("Trạng thái"),
+                "n_reasons": st.column_config.NumberColumn("Số tín hiệu", width="small"),
+                "suggested_support": st.column_config.TextColumn("Hỗ trợ đề xuất"),
+            })
+        st.download_button("⬇️ Tải danh sách đang lọc (CSV)", view.to_csv(index=False).encode("utf-8"),
+                           file_name="risk_list_filtered.csv", mime="text/csv", key="rl_download")
+
+    with right:
+        if view.empty:
+            st.info("Không có ca nào khớp bộ lọc.")
+        else:
+            options = view["pid"].tolist()
+            rows = event.selection.rows if event is not None else []
+            picked = options[rows[0]] if rows and rows[0] < len(options) else None
+            if picked and st.session_state.get("_rl_last_pick") != picked:
+                st.session_state["case_pid"] = picked  # đồng bộ lựa chọn trên bảng → hộp chọn ca
+                st.session_state["_rl_last_pick"] = picked
+            if st.session_state.get("case_pid") not in options:
+                st.session_state["case_pid"] = options[0]
+            label = dict(zip(view["pid"], "#" + view["rank"].astype(str) + " · " + view["pid"] + " · " + view["tier"]))
+            pid = st.selectbox("Ca đang xem", options, key="case_pid", format_func=label.get)
+            case_detail(view[view["pid"] == pid].iloc[0], reviewer)
+
+    sc = read_csv("aq10_strategy_comparison.csv")
+    if sc is not None and len(sc):
+        st.divider()
+        chart(strategy_chart(sc))
+        st.caption("Coverage@K: tỷ lệ sinh viên cần hỗ trợ được đưa vào top K · Precision@K: tỷ lệ đúng trong top K.")
+
+
 # ---------------------------------------------------------------------------
 st.sidebar.title("🎓 EduEarlyAlert")
 role = st.sidebar.radio("Vai trò (mô phỏng phân quyền)", ["Program Manager", "Lecturer", "Advisor"])
@@ -532,56 +711,4 @@ elif role == "Lecturer":
 
 # ---------------------------------------------------------------------------
 else:
-    st.header("Danh sách đề xuất hỗ trợ (Risk List)")
-    st.info(
-        "Đây là **đề xuất**, không phải kết luận về sinh viên. Hãy đọc lý do, cân nhắc bối cảnh "
-        "và chọn Phê duyệt / Bỏ qua cho từng ca. Không có tin nhắn nào được gửi tự động."
-    )
-    if need(REPORTS / "risk_list.csv"):
-        rl = pd.read_csv(REPORTS / "risk_list.csv").fillna("")
-        if DECISIONS.exists():
-            dec = pd.read_csv(DECISIONS).fillna("")
-            rl = rl.drop(columns=["status", "reviewed_by", "decision_note"]).merge(
-                dec[["pid", "status", "reviewed_by", "decision_note"]], on="pid", how="left")
-            rl["status"] = rl["status"].replace("", pd.NA).fillna("pending_review")
-
-        tiers = st.multiselect("Mức ưu tiên", ["Rất cao", "Cao", "Theo dõi"], default=["Rất cao", "Cao", "Theo dõi"])
-        status = st.multiselect("Trạng thái", ["pending_review", "approved", "dismissed", "contacted"],
-                                default=["pending_review", "approved"])
-        view = rl[rl["tier"].isin(tiers) & rl["status"].isin(status)]
-        st.caption(f"{len(view)} / {len(rl)} ca hiển thị · năng lực giả định "
-                   f"{cfg['advisor']['k_per_advisor']} ca/cố vấn/tuần")
-
-        for r in view.itertuples(index=False):
-            with st.expander(f"#{r.rank} · {r.pid} · {r.tier} · risk {r.risk_score:.2f} · [{r.status}]"):
-                st.markdown("**Lý do (tín hiệu dữ liệu, không phải nguyên nhân):**")
-                for reason in str(r.reasons).split(" | "):
-                    st.markdown(f"- {reason}")
-                if r.concepts_need_support:
-                    st.markdown(f"**Concept cần hỗ trợ thêm:** {r.concepts_need_support}")
-                if r.suggested_resources:
-                    st.markdown(f"**Tài nguyên gợi ý:** {r.suggested_resources}")
-                st.markdown(f"**Loại hỗ trợ đề xuất:** {r.suggested_support}")
-                note = st.text_input("Ghi chú quyết định", key=f"note_{r.pid}", value=str(r.decision_note))
-                b1, b2, b3 = st.columns(3)
-                action = None
-                if b1.button("✅ Phê duyệt liên hệ", key=f"ok_{r.pid}"):
-                    action = "approved"
-                if b2.button("⏭️ Bỏ qua", key=f"skip_{r.pid}"):
-                    action = "dismissed"
-                if b3.button("📞 Đã liên hệ", key=f"done_{r.pid}"):
-                    action = "contacted"
-                if action:
-                    if not reviewer.strip():
-                        st.error("Cần nhập tên người duyệt ở sidebar.")
-                    else:
-                        row = pd.DataFrame([{"pid": r.pid, "status": action, "reviewed_by": reviewer,
-                                             "decision_note": note}])
-                        old = pd.read_csv(DECISIONS) if DECISIONS.exists() else pd.DataFrame(columns=row.columns)
-                        pd.concat([old[old["pid"] != r.pid], row]).to_csv(DECISIONS, index=False)
-                        audit(cfg, f"risk_list_{action}", pid=r.pid, reviewer=reviewer, note=note)
-                        st.success(f"Đã ghi: {action}")
-                        st.rerun()
-
-        st.subheader("So sánh phương án ưu tiên (AQ10)")
-        show_fig("aq10_coverage_at_k.png")
+    advisor_view(reviewer)

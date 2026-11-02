@@ -1,0 +1,4 @@
+strategy,K,coverage_at_K,precision_at_K
+A_risk_only,70,0.465,0.943
+C_risk_plus_missing_work,70,0.444,0.9
+B_risk_plus_engagement_drop,70,0.423,0.857
