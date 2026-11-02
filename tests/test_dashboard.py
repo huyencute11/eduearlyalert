@@ -33,21 +33,38 @@ def test_role_renders_without_error(app, role):
     assert not at.exception, at.exception
 
 
+def _sources(at) -> str:
+    return " ".join(c.value for c in at.caption)
+
+
 def test_program_manager_shows_interactive_charts(app):
     at = _switch(app, "Program Manager")
-    charts = at.get("plotly_chart")
-    assert len(charts) >= 5  # cohort, metrics, confusion, importance, threshold, fairness
+    assert len(at.get("plotly_chart")) >= 6
     assert len(at.metric) >= 4
 
 
-@pytest.mark.parametrize("role", ["Program Manager", "Lecturer"])
-def test_eda_view_has_interactive_charts(app, role):
+# Mỗi vai trò mở đầu bằng câu hỏi quyết định của mình (docs/01_project_overview.md) và có bằng chứng AQ tương ứng.
+ROLE_STORY = {
+    "Program Manager": ("D3", ["AQ1", "AQ7", "AQ9", "AQ12"]),
+    "Lecturer": ("D2", ["AQ2", "AQ3", "AQ4", "AQ5", "AQ6"]),
+    "Advisor": ("D1", ["AQ10"]),
+}
+
+
+@pytest.mark.parametrize("role", ROLES)
+def test_role_starts_with_decision_question_and_findings(app, role):
     at = _switch(app, role)
+    decision, aqs = ROLE_STORY[role]
+    md = " ".join(m.value for m in at.markdown)
+    assert "❓" in md and "Kết luận chính" in md, f"{role} thiếu câu hỏi/kết luận"
+    assert any(decision in c.value for c in at.caption), f"{role} không nêu quyết định {decision}"
+    for aq in aqs:
+        assert aq in _sources(at), f"{role} thiếu bằng chứng {aq}"
+
+
+def test_lecturer_has_presentation_filter(app):
+    at = _switch(app, "Lecturer")
     assert at.selectbox(key="eda_pres") is not None
-    titles = " ".join(json.loads(c.proto.spec)["layout"].get("title", {}).get("text", "")
-                      for c in at.get("plotly_chart"))
-    for aq in ["AQ1", "AQ2", "AQ3", "AQ4", "AQ5", "AQ6"]:
-        assert f"{aq} ·" in titles, f"{role} thiếu biểu đồ {aq}"
 
 
 def test_eda_presentation_filter_reruns(app):
@@ -70,10 +87,14 @@ def test_threshold_selector_updates_kpi(app, pipeline_done):
 
     at = _switch(app, "Program Manager")
     shares = pd.read_csv(pipeline_done.path("reports_dir") / "aq12_threshold_scenarios.csv")["alert_share"]
-    first = at.metric[4].value  # KPI "Số ca cảnh báo" của tab AQ12
+
+    def alerted():
+        return next(m.value for m in at.metric if m.label == "Số sinh viên được cảnh báo")
+
+    first = alerted()
     at.select_slider(key="alert_share").set_value(float(shares.iloc[-1])).run()
     assert not at.exception
-    assert at.metric[4].value != first
+    assert alerted() != first
 
 
 # ---- Advisor: Risk List + human validation gate ----------------------------
