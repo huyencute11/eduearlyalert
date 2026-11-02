@@ -183,8 +183,8 @@ def program_manager_view() -> None:
     c3.metric("F1 (test)", f"{t['f1']:.2f}", f"{t['f1'] - acc['f1_min']:+.2f} so với tiêu chí", help=f"Tiêu chí ≥ {acc['f1_min']}")
     c4.metric("Tỷ lệ được cảnh báo (test)", f"{t['alert_rate']:.0%}", help=f"Mô hình chính: {MODEL_LABEL.get(main, main)}")
 
-    tab_cohort, tab_model, tab_thr, tab_fair = st.tabs(
-        ["Cohort", "Mô hình (AQ7)", "Ngưỡng & năng lực (AQ12)", "Công bằng (AQ9)"])
+    tab_cohort, tab_model, tab_thr, tab_fair, tab_eda = st.tabs(
+        ["Cohort", "Mô hình (AQ7)", "Ngưỡng & năng lực (AQ12)", "Công bằng (AQ9)", "Khám phá dữ liệu (AQ1–AQ6)"])
 
     with tab_cohort:
         if flow is not None:
@@ -241,6 +241,271 @@ def program_manager_view() -> None:
                 st.caption(f"{len(hidden)} nhóm có n < {cfg['fairness']['min_group_size']} đã được ẩn số liệu.")
             st.caption("Thuộc tính nhạy cảm chỉ dùng để kiểm định công bằng, không đưa vào mô hình.")
 
+    with tab_eda:
+        eda_view()
+
+
+# ---- EDA tương tác (AQ1–AQ6) – đọc reports/aqX_*.csv do eda.export_dashboard_data sinh ----
+ALL_PRES = "train+valid"
+GROUP_COLOR = {"Hoàn thành": SERIES[0], "Không hoàn thành": SERIES[1]}
+STATUS = {"on_time": ("Đúng hạn", SERIES[0]), "late": ("Muộn", SERIES[2]), "missing": ("Chưa nộp (tại mốc)", SERIES[1])}
+
+
+def visible(df: pd.DataFrame) -> pd.DataFrame:
+    """Bỏ các dòng đã bị ẩn vì nhóm < min_group_size."""
+    return df[~df["suppressed"].astype(bool)] if "suppressed" in df.columns else df
+
+
+def week_label(w: int) -> str:
+    return "Trước" if w <= 0 else f"T{w}"
+
+
+def aq1_outcome_chart(d: pd.DataFrame) -> go.Figure:
+    d = visible(d[d["code_presentation"] != ALL_PRES])
+    order = ["Distinction", "Pass", "Fail", "Withdrawn"]
+    fig = go.Figure()
+    for i, res in enumerate([r for r in order if r in set(d["final_result"])]):
+        s = d[d["final_result"] == res]
+        fig.add_bar(name=res, x=s["code_presentation"], y=s["share"], customdata=s["n"],
+                    marker={"color": SERIES[i], "line": {"width": 2, "color": "white"}},
+                    hovertemplate="%{y:.1%} (n=%{customdata:.0f})<extra>" + res + "</extra>")
+    fig.update_layout(barmode="stack", title="AQ1 · Kết quả cuối kỳ theo lượt giảng dạy")
+    return style(fig, y_pct=True)
+
+
+def aq1_withdrawal_chart(d: pd.DataFrame) -> go.Figure:
+    d = visible(d[d["code_presentation"] != ALL_PRES])
+    fig = go.Figure()
+    for i, (p, s) in enumerate(d.groupby("code_presentation")):
+        fig.add_scatter(x=s["week"], y=s["cum_share"], name=p, mode="lines",
+                        line={"width": 2, "color": SERIES[i % len(SERIES)]}, hovertemplate="%{y:.1%}")
+    cut_week = (cfg.cutoff_day + 1) / cfg["timeline"]["week_length"]
+    fig.add_vline(x=cut_week, line={"dash": "dot", "width": 1, "color": "gray"},
+                  annotation_text="Mốc dự báo", annotation_position="top right")
+    fig.update_layout(title="AQ1 · Rút môn tích luỹ theo tuần")
+    fig = style(fig)
+    fig.update_yaxes(tickformat=".0%")
+    fig.update_xaxes(title="Tuần học")
+    return fig
+
+
+def aq2_heatmap_chart(d: pd.DataFrame) -> go.Figure:
+    t = d.pivot_table(index="activity_type", columns="week", values="clicks_per_student", aggfunc="sum").fillna(0)
+    t = t.loc[t.sum(axis=1).sort_values().index]
+    fig = go.Figure(go.Heatmap(
+        z=t.values, x=[week_label(int(w)) for w in t.columns], y=t.index, xgap=2, ygap=2,
+        colorscale=[[0, "#cde2fb"], [0.5, "#3987e5"], [1, "#104281"]], colorbar={"title": "Click/SV"},
+        texttemplate="%{z:.0f}", hovertemplate="%{y} · %{x}: %{z:.1f} click/SV<extra></extra>"))
+    fig.update_layout(title="AQ2 · Click trung bình/sinh viên theo tuần × loại tài nguyên")
+    fig = style(fig, height=max(320, 30 * len(t) + 100))
+    fig.update_layout(hovermode="closest")
+    return fig
+
+
+def aq2_box_chart(d: pd.DataFrame) -> go.Figure:
+    d = visible(d)
+    fig = go.Figure(go.Box(
+        x=[week_label(int(w)) for w in d["week"]], q1=d["q1"], median=d["median"], q3=d["q3"],
+        lowerfence=[0] * len(d), upperfence=d["p90"], marker_color=SERIES[0], name="Click/tuần",
+        customdata=d["zero_share"], hoverinfo="x+y"))
+    fig.update_layout(title="AQ2 · Phân bố click theo tuần (hộp = Q1–Q3, râu = 0–P90)", showlegend=False)
+    fig = style(fig)
+    fig.update_layout(hovermode="closest")
+    return fig
+
+
+def aq2_zero_chart(d: pd.DataFrame) -> go.Figure:
+    d = visible(d)
+    fig = go.Figure(go.Scatter(x=[week_label(int(w)) for w in d["week"]], y=d["zero_share"], mode="lines+markers",
+                               line={"width": 2, "color": SERIES[1]}, marker={"size": 9},
+                               hovertemplate="%{y:.1%} sinh viên 0 click<extra></extra>"))
+    fig.update_layout(title="AQ2 · Tỷ lệ sinh viên không có click trong tuần")
+    fig = style(fig)
+    fig.update_yaxes(tickformat=".0%", rangemode="tozero")
+    return fig
+
+
+def aq3_submission_chart(d: pd.DataFrame) -> go.Figure:
+    d = visible(d)
+    fig = go.Figure()
+    for status, (label, color) in STATUS.items():
+        s = d[d["status"] == status]
+        fig.add_bar(name=label, y=s["assessment_key"], x=s["share"], orientation="h", customdata=s["n"],
+                    marker={"color": color, "line": {"width": 2, "color": "white"}},
+                    hovertemplate="%{x:.1%} (n=%{customdata:.0f})<extra>" + label + "</extra>")
+    fig.update_layout(barmode="stack", title="AQ3 · Tình trạng nộp bài đánh giá đầu kỳ")
+    fig = style(fig, height=max(260, 50 * d["assessment_key"].nunique() + 120))
+    fig.update_layout(hovermode="y unified")
+    fig.update_xaxes(tickformat=".0%", range=[0, 1], showgrid=True, gridcolor="rgba(128,128,128,0.18)")
+    fig.update_yaxes(categoryorder="category descending")
+    return fig
+
+
+def aq3_score_chart(d: pd.DataFrame, keys: list[str]) -> go.Figure:
+    d = visible(d)
+    fig = go.Figure()
+    for i, k in enumerate(keys):
+        s = d[d["assessment_key"] == k]
+        fig.add_bar(name=k, x=s["bin_left"] + 2.5, y=s["n"], width=5, opacity=0.75 if len(keys) > 1 else 1,
+                    marker={"color": SERIES[i % len(SERIES)], "line": {"width": 1, "color": "white"}},
+                    hovertemplate="Điểm %{x:.0f}±2.5: %{y:.0f} SV<extra>" + k + "</extra>")
+    fig.add_vline(x=40, line={"dash": "dot", "width": 1, "color": "gray"}, annotation_text="Ngưỡng đạt 40")
+    fig.update_layout(barmode="overlay", title="AQ3 · Phân bố điểm các bài đầu kỳ")
+    fig = style(fig)
+    fig.update_xaxes(range=[0, 100], title="Điểm", dtick=10)
+    fig.update_yaxes(title="Số sinh viên")
+    return fig
+
+
+def aq4_weekly_chart(d: pd.DataFrame) -> go.Figure:
+    d = visible(d)
+    fig = go.Figure()
+    for grp, s in d.groupby("group"):
+        fig.add_scatter(x=[week_label(int(w)) for w in s["week"]], y=s["median"], name=grp, mode="lines+markers",
+                        line={"width": 2, "color": GROUP_COLOR.get(grp, SERIES[2])},
+                        marker={"size": 9, "line": {"width": 2, "color": "white"}}, hovertemplate="%{y:.0f} click")
+    fig.update_layout(title="AQ4 · Trung vị click/tuần: hai nhóm tách nhau từ tuần nào?")
+    fig = style(fig)
+    fig.update_yaxes(rangemode="tozero", title="Trung vị click/tuần")
+    return fig
+
+
+def aq4_effect_chart(d: pd.DataFrame) -> go.Figure:
+    d = d.sort_values("cliffs_delta")
+    fig = go.Figure(go.Bar(x=d["cliffs_delta"], y=d["indicator"], orientation="h", marker_color=SERIES[0],
+                           customdata=d[["magnitude", "p_holm"]],
+                           hovertemplate="%{y}<br>δ = %{x:.2f} (%{customdata[0]})<br>p Holm = %{customdata[1]:.1e}"
+                                         "<extra></extra>"))
+    fig.add_vline(x=0, line={"width": 1, "color": "gray"})
+    fig.update_layout(title="AQ4 · Effect size (Cliff's δ: hoàn thành vs không)")
+    fig = style(fig, height=320)
+    fig.update_layout(hovermode="closest")
+    fig.update_xaxes(range=[-1, 1], showgrid=True, gridcolor="rgba(128,128,128,0.18)")
+    return fig
+
+
+def aq5_score_chart(d: pd.DataFrame) -> go.Figure:
+    d = visible(d)
+    fig = go.Figure(go.Bar(x=d["bin"], y=d["completion"], customdata=d["n"], marker_color=SERIES[0],
+                           text=[f"{v:.0%}" for v in d["completion"]], textposition="outside",
+                           hovertemplate="%{x}: %{y:.1%} hoàn thành (n=%{customdata})<extra></extra>"))
+    fig.update_layout(title="AQ5 · Tỷ lệ hoàn thành theo điểm bài đánh giá đầu tiên")
+    fig = style(fig, y_pct=True)
+    fig.update_layout(hovermode="closest")
+    fig.update_xaxes(title="Điểm bài đầu tiên")
+    return fig
+
+
+def aq5_or_chart(d: pd.DataFrame) -> go.Figure:
+    d = d.rename(columns={d.columns[0]: "term"}).sort_values("odds_ratio_per_SD")
+    fig = go.Figure(go.Scatter(
+        x=d["odds_ratio_per_SD"], y=d["term"], mode="markers", marker={"size": 10, "color": SERIES[0]},
+        error_x={"type": "data", "symmetric": False, "array": d["ci_high"] - d["odds_ratio_per_SD"],
+                     "arrayminus": d["odds_ratio_per_SD"] - d["ci_low"], "thickness": 2, "width": 0, "color": SERIES[0]},
+        customdata=d[["ci_low", "ci_high", "p_value"]],
+        hovertemplate="%{y}<br>OR = %{x:.2f} [%{customdata[0]:.2f}–%{customdata[1]:.2f}]"
+                      "<br>p = %{customdata[2]:.1e}<extra></extra>"))
+    fig.add_vline(x=1, line={"dash": "dot", "width": 1, "color": "gray"})
+    fig.update_layout(title="AQ5 · OR của không hoàn thành / +1 SD (CI 95%, đã điều chỉnh)")
+    fig = style(fig, height=320)
+    fig.update_layout(hovermode="closest")
+    fig.update_xaxes(type="log", showgrid=True, gridcolor="rgba(128,128,128,0.18)")
+    return fig
+
+
+def aq6_concept_chart(d: pd.DataFrame) -> go.Figure:
+    d = visible(d)
+    fig = go.Figure()
+    for grp in ["Hoàn thành", "Không hoàn thành"]:
+        s = d[d["group"] == grp].sort_values("concept_id", ascending=False)
+        fig.add_bar(name=grp, y=s["concept_id"], x=s["share_needs_support"], orientation="h", customdata=s["n"],
+                    marker_color=GROUP_COLOR[grp], hovertemplate="%{x:.1%} (n=%{customdata})<extra>" + grp + "</extra>")
+    fig.update_layout(barmode="group", title="AQ6 · Tỷ lệ cần hỗ trợ thêm theo concept (KG MÔ PHỎNG)")
+    fig = style(fig, height=max(320, 44 * d["concept_id"].nunique() + 120))
+    fig.update_layout(hovermode="y unified")
+    fig.update_xaxes(tickformat=".0%", range=[0, 1], showgrid=True, gridcolor="rgba(128,128,128,0.18)")
+    return fig
+
+
+def eda_view() -> None:
+    """EDA AQ1–AQ6: chỉ train + valid (tập test giữ kín), số liệu tổng hợp, nhóm < min_group_size bị ẩn."""
+    out = read_csv("aq1_outcomes.csv")
+    if out is None:
+        st.warning("Chưa có dữ liệu EDA cho dashboard. Chạy `python -m eduearlyalert.pipeline eda` trước.")
+        return
+    pres_options = [ALL_PRES] + sorted(p for p in out["code_presentation"].unique() if p != ALL_PRES)
+    pres = st.selectbox("Lượt giảng dạy", pres_options, key="eda_pres",
+                        format_func=lambda p: "Tất cả (train + valid)" if p == ALL_PRES else p,
+                        help="EDA chỉ dùng train + valid; tập test được giữ kín cho đánh giá cuối.")
+
+    def sel(name: str) -> pd.DataFrame | None:
+        d = read_csv(name)
+        return None if d is None else d[d["code_presentation"] == pres]
+
+    t1, t2, t3, t4, t5, t6 = st.tabs(["AQ1 Hoàn thành", "AQ2 Tương tác LMS", "AQ3 Nộp bài & điểm",
+                                      "AQ4 Engagement theo nhóm", "AQ5 Điểm & hoàn thành", "AQ6 Concept"])
+    with t1:
+        st.caption("So sánh giữa các lượt giảng dạy nên không áp dụng bộ lọc lượt.")
+        c1, c2 = st.columns(2)
+        with c1:
+            chart(aq1_outcome_chart(out))
+        wd = read_csv("aq1_withdrawal.csv")
+        if wd is not None:
+            with c2:
+                chart(aq1_withdrawal_chart(wd))
+    with t2:
+        act, wk = sel("aq2_activity_week.csv"), sel("aq2_weekly_clicks.csv")
+        if act is not None and len(act):
+            weeks = sorted(int(w) for w in act["week"].unique())
+            lo, hi = st.select_slider("Khoảng tuần", options=weeks, value=(weeks[0], weeks[-1]),
+                                      format_func=week_label, key="eda_weeks")
+            chart(aq2_heatmap_chart(visible(act[act["week"].between(lo, hi)])))
+        if wk is not None and len(wk):
+            c1, c2 = st.columns(2)
+            with c1:
+                chart(aq2_box_chart(wk))
+            with c2:
+                chart(aq2_zero_chart(wk))
+        st.caption("Click là proxy của tương tác, không đo được chất lượng học.")
+    with t3:
+        sub, sc = sel("aq3_submission.csv"), sel("aq3_scores.csv")
+        if sub is None or not len(sub):
+            st.info("Chưa có bài đánh giá nào trước mốc dự báo.")
+        else:
+            chart(aq3_submission_chart(sub))
+            if sc is not None and len(sc):
+                keys = sorted(sc["assessment_key"].unique())
+                pick = st.multiselect("Bài đánh giá", keys, default=keys[:2], key="eda_assess", max_selections=4)
+                if pick:
+                    chart(aq3_score_chart(sc, pick))
+            st.caption("Bài nộp sau ngày mốc được tính là 'chưa nộp' vì chưa quan sát được tại mốc dự báo.")
+    with t4:
+        wm = sel("aq4_weekly_median.csv")
+        if wm is not None:
+            chart(aq4_weekly_chart(wm))
+        gc = read_csv("aq4_group_comparison.csv")
+        if gc is not None and len(gc):
+            chart(aq4_effect_chart(gc))
+            st.caption("Effect size tính trên toàn bộ train + valid. Khác biệt/liên hệ, không phải quan hệ nhân quả.")
+    with t5:
+        fs = sel("aq5_first_score.csv")
+        c1, c2 = st.columns(2)
+        if fs is not None:
+            with c1:
+                chart(aq5_score_chart(fs))
+        orr = read_csv("aq5_logit_odds_ratios.csv")
+        if orr is not None and len(orr):
+            with c2:
+                chart(aq5_or_chart(orr))
+        st.caption("Mô hình giải thích, không phải dự báo; liên hệ, không phải nhân quả.")
+    with t6:
+        cg = sel("aq6_concept_gaps.csv")
+        if cg is None or not len(cg):
+            st.info("Chưa có ánh xạ concept cho module này (kg/concept_map.csv).")
+        else:
+            chart(aq6_concept_chart(cg))
+            st.caption("⚠️ Ánh xạ concept là DỮ LIỆU MÔ PHỎNG (kg/), ở mức bài đánh giá, không phải mức câu hỏi.")
+
 
 # ---------------------------------------------------------------------------
 st.sidebar.title("🎓 EduEarlyAlert")
@@ -259,13 +524,7 @@ if role == "Program Manager":
 elif role == "Lecturer":
     st.header("Thông tin cho giảng viên")
     st.caption("Chỉ số tổng hợp theo bài đánh giá và concept – không hiển thị cá nhân.")
-    c1, c2 = st.columns(2)
-    with c1:
-        show_fig("aq3_submission_status.png")
-    with c2:
-        show_fig("aq3_score_distribution.png")
-    show_fig("aq6_concept_gaps.png", "Concept dựa trên ánh xạ MÔ PHỎNG (kg/)")
-    show_fig("aq4_weekly_median_clicks.png")
+    eda_view()
     kgmd = REPORTS / "kg_competency_questions.md"
     if kgmd.exists():
         with st.expander("Đường giải thích Assessment → Concept → CLO → Resource"):

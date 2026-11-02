@@ -322,6 +322,129 @@ def aq6_concept_gaps(gaps: pd.DataFrame, pop: pd.DataFrame, figdir) -> dict | No
 
 
 # ---------------------------------------------------------------------------
+# Dữ liệu tổng hợp cho dashboard tương tác (app/dashboard.py)
+# ---------------------------------------------------------------------------
+ALL_PRES = "train+valid"
+SCORE_BIN_WIDTH = 5
+
+
+def _by_presentation(df: pd.DataFrame, fn) -> pd.DataFrame:
+    """Áp `fn` cho từng presentation và cho toàn bộ (nhãn `ALL_PRES`), ghép lại."""
+    parts = [fn(g).assign(code_presentation=p) for p, g in df.groupby("code_presentation")]
+    parts.append(fn(df).assign(code_presentation=ALL_PRES))
+    out = pd.concat(parts, ignore_index=True)
+    return out[["code_presentation"] + [c for c in out.columns if c != "code_presentation"]]
+
+
+def _suppress(df: pd.DataFrame, n_col: str, value_cols: list[str], min_n: int) -> pd.DataFrame:
+    """Ẩn giá trị của dòng có mẫu số `n_col` < min_n (giữ khoá như week/bin để vẽ trục)."""
+    out = df.copy()
+    small = out[n_col] < min_n
+    out[value_cols] = out[value_cols].astype(float)
+    out.loc[small, value_cols] = np.nan
+    out["suppressed"] = small
+    return out
+
+
+def export_dashboard_data(cfg: Config, eda_coh: pd.DataFrame, eda_df: pd.DataFrame, pop: pd.DataFrame,
+                          weekly: pd.DataFrame, long_e: pd.DataFrame, gaps: pd.DataFrame, reports) -> list[str]:
+    """AQ1–AQ6 · Bảng tổng hợp (train+valid, chỉ số đếm/tỷ lệ, không có pid) cho biểu đồ tương tác.
+
+    Output: reports/aq1_outcomes.csv, aq1_withdrawal.csv, aq2_activity_week.csv, aq2_weekly_clicks.csv,
+    aq3_submission.csv, aq3_scores.csv, aq4_weekly_median.csv, aq5_first_score.csv, aq6_concept_gaps.csv.
+    Mỗi bảng có cột `code_presentation` (gồm dòng gộp `train+valid`) và `suppressed` (nhóm < min_group_size).
+    """
+    min_n = cfg["fairness"]["min_group_size"]
+    wl = cfg["timeline"]["week_length"]
+    tables: dict[str, pd.DataFrame] = {}
+
+    def outcomes(g):
+        t = g["final_result"].value_counts().rename_axis("final_result").reset_index(name="n")
+        t["n_group"] = len(g)
+        t["share"] = t["n"] / len(g)
+        return t
+    tables["aq1_outcomes"] = _suppress(_by_presentation(eda_coh, outcomes), "n_group", ["n", "share"], min_n)
+
+    max_week = int(np.ceil(eda_coh["module_presentation_length"].max() / wl))
+
+    def withdrawal(g):
+        wk = np.floor(g["date_unregistration"].dropna().astype(float) / wl) + 1
+        weeks = np.arange(0, max_week + 1)
+        return pd.DataFrame({"week": weeks, "n_group": len(g), "cum_share": [(wk <= w).sum() / len(g) for w in weeks]})
+    tables["aq1_withdrawal"] = _suppress(_by_presentation(eda_coh, withdrawal), "n_group", ["cum_share"], min_n)
+
+    n_students = eda_df.groupby("code_presentation")["pid"].nunique()
+    top_types = weekly.groupby("activity_type")["clicks"].sum().nlargest(12).index
+
+    def activity(g):
+        n = int(n_students.reindex(g["code_presentation"].unique()).sum())
+        t = g[g["activity_type"].isin(top_types)].groupby(["activity_type", "week"])["clicks"].sum().reset_index()
+        t["n_group"] = n
+        t["clicks_per_student"] = t["clicks"] / max(n, 1)
+        return t.drop(columns="clicks")
+    tables["aq2_activity_week"] = _suppress(_by_presentation(weekly, activity), "n_group", ["clicks_per_student"], min_n)
+
+    week_cols = sorted([c for c in eda_df.columns if c.startswith("clicks_w")], key=lambda c: int(c[8:]))
+
+    def weekly_clicks(g):
+        rows = [{"week": int(c[8:]), "n_group": len(g), "q1": g[c].quantile(.25), "median": g[c].median(),
+                 "q3": g[c].quantile(.75), "p90": g[c].quantile(.9), "zero_share": (g[c] == 0).mean()}
+                for c in week_cols]
+        return pd.DataFrame(rows)
+    tables["aq2_weekly_clicks"] = _suppress(_by_presentation(eda_df, weekly_clicks), "n_group",
+                                            ["q1", "median", "q3", "p90", "zero_share"], min_n)
+
+    if not long_e.empty:
+        lk = add_assessment_key(long_e)
+
+        def submission(g):
+            t = g.groupby(["assessment_key", "status"]).size().rename("n").reset_index()
+            t["n_group"] = t.groupby("assessment_key")["n"].transform("sum")
+            t["share"] = t["n"] / t["n_group"]
+            return t
+        tables["aq3_submission"] = _suppress(_by_presentation(lk, submission), "n_group", ["n", "share"], min_n)
+
+        def scores(g):
+            s = g.dropna(subset=["score"]).copy()
+            s["bin_left"] = (np.minimum(s["score"], 99.999) // SCORE_BIN_WIDTH * SCORE_BIN_WIDTH).astype(int)
+            t = s.groupby(["assessment_key", "bin_left"]).size().rename("n").reset_index()
+            t["n_group"] = t.groupby("assessment_key")["n"].transform("sum")
+            return t
+        tables["aq3_scores"] = _suppress(_by_presentation(lk, scores), "n_group", ["n"], min_n)
+
+    def weekly_median(g):
+        rows = [{"group": plotting.GROUP_LABELS[k], "week": int(c[8:]), "n_group": int((g["y"] == k).sum()),
+                 "median": g.loc[g["y"] == k, c].median()} for k in (0, 1) for c in week_cols]
+        return pd.DataFrame(rows)
+    tables["aq4_weekly_median"] = _suppress(_by_presentation(pop, weekly_median), "n_group", ["median"], min_n)
+
+    if pop["first_assess_score"].notna().any():
+        def first_score(g):
+            b = pd.cut(g["first_assess_score"], [-0.1, 40, 60, 80, 100], labels=["<40", "40–60", "60–80", "80–100"])
+            b = b.cat.add_categories(["Chưa nộp"])
+            b[g["first_assess_missing"] == 1] = "Chưa nộp"
+            t = g.groupby(b, observed=False)["y"].agg(n="size", completion=lambda v: 1 - v.mean())
+            return t.rename_axis("bin").reset_index().assign(bin=lambda d: d["bin"].astype(str))
+        tables["aq5_first_score"] = _suppress(_by_presentation(pop, first_score), "n", ["completion"], min_n)
+
+    if not gaps.empty:
+        g6 = gaps.merge(pop[["pid", "code_presentation", "y"]], on=["pid", "code_presentation"])
+
+        def concept_gaps(g):
+            t = g.groupby(["concept_id", "y"])["needs_support"].agg(n="size", share_needs_support="mean").reset_index()
+            t["group"] = t["y"].map(plotting.GROUP_LABELS)
+            return t.drop(columns="y")
+        tables["aq6_concept_gaps"] = _suppress(_by_presentation(g6, concept_gaps), "n", ["share_needs_support"], min_n)
+
+    written = []
+    for name, t in tables.items():
+        assert "pid" not in t.columns and "id_student" not in t.columns, name
+        t.round(4).to_csv(reports / f"{name}.csv", index=False)
+        written.append(f"{name}.csv")
+    return written
+
+
+# ---------------------------------------------------------------------------
 def run(cfg: Config) -> list[dict]:
     plotting.setup()
     figdir, reports, interim, processed = (cfg.path(k) for k in
@@ -354,6 +477,9 @@ def run(cfg: Config) -> list[dict]:
     f6 = aq6_concept_gaps(gaps[gaps["pid"].isin(pids)] if not gaps.empty else gaps, pop, figdir)
     if f6:
         findings.append(f6)
+    gaps_e = gaps[gaps["pid"].isin(pids)] if not gaps.empty else gaps
+    dash_tables = export_dashboard_data(cfg, eda_coh, eda_df, pop, weekly[weekly["pid"].isin(pids)],
+                                        long_e, gaps_e, reports)
 
     lines = [
         "# EDA Findings – Observation · Insight · Evidence · Limitation",
@@ -380,5 +506,5 @@ def run(cfg: Config) -> list[dict]:
             "",
         ]
     (reports / "eda_findings.md").write_text("\n".join(lines), encoding="utf-8")
-    audit(cfg, "eda", n_figures=len(findings))
+    audit(cfg, "eda", n_figures=len(findings), n_dashboard_tables=len(dash_tables))
     return findings

@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import json
 from pathlib import Path
 
 import pytest
@@ -37,6 +38,23 @@ def test_program_manager_shows_interactive_charts(app):
     charts = at.get("plotly_chart")
     assert len(charts) >= 5  # cohort, metrics, confusion, importance, threshold, fairness
     assert len(at.metric) >= 4
+
+
+@pytest.mark.parametrize("role", ["Program Manager", "Lecturer"])
+def test_eda_view_has_interactive_charts(app, role):
+    at = _switch(app, role)
+    assert at.selectbox(key="eda_pres") is not None
+    titles = " ".join(json.loads(c.proto.spec)["layout"].get("title", {}).get("text", "")
+                      for c in at.get("plotly_chart"))
+    for aq in ["AQ1", "AQ2", "AQ3", "AQ4", "AQ5", "AQ6"]:
+        assert f"{aq} ·" in titles, f"{role} thiếu biểu đồ {aq}"
+
+
+def test_eda_presentation_filter_reruns(app):
+    at = _switch(app, "Lecturer")
+    box = at.selectbox(key="eda_pres")
+    box.set_value(box.options[-1]).run()
+    assert not at.exception
 
 
 @pytest.mark.parametrize("role", ["Program Manager", "Lecturer"])
