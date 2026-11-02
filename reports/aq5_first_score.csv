@@ -1,0 +1,21 @@
+code_presentation,bin,n,completion,suppressed
+2013B,<40,12,0.1667,False
+2013B,40–60,54,0.463,False
+2013B,60–80,104,0.6827,False
+2013B,80–100,88,0.8068,False
+2013B,Chưa nộp,103,0.2621,False
+2013J,<40,10,0.6,False
+2013J,40–60,73,0.4521,False
+2013J,60–80,95,0.6842,False
+2013J,80–100,80,0.8375,False
+2013J,Chưa nộp,99,0.4545,False
+2014B,<40,12,0.3333,False
+2014B,40–60,50,0.4,False
+2014B,60–80,113,0.6903,False
+2014B,80–100,65,0.7538,False
+2014B,Chưa nộp,118,0.3051,False
+train+valid,<40,34,0.3529,False
+train+valid,40–60,177,0.4407,False
+train+valid,60–80,312,0.6859,False
+train+valid,80–100,233,0.8026,False
+train+valid,Chưa nộp,320,0.3375,False

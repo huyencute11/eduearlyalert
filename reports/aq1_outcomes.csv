@@ -1,0 +1,17 @@
+code_presentation,final_result,n,n_group,share,suppressed
+2013B,Pass,144.0,400,0.36,False
+2013B,Withdrawn,115.0,400,0.2875,False
+2013B,Fail,88.0,400,0.22,False
+2013B,Distinction,53.0,400,0.1325,False
+2013J,Pass,163.0,400,0.4075,False
+2013J,Fail,94.0,400,0.235,False
+2013J,Withdrawn,88.0,400,0.22,False
+2013J,Distinction,55.0,400,0.1375,False
+2014B,Pass,134.0,400,0.335,False
+2014B,Withdrawn,110.0,400,0.275,False
+2014B,Fail,101.0,400,0.2525,False
+2014B,Distinction,55.0,400,0.1375,False
+train+valid,Pass,441.0,1200,0.3675,False
+train+valid,Withdrawn,313.0,1200,0.2608,False
+train+valid,Fail,283.0,1200,0.2358,False
+train+valid,Distinction,163.0,1200,0.1358,False

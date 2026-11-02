@@ -1,0 +1,57 @@
+code_presentation,concept_id,n,share_needs_support,group,suppressed
+2013B,C01,197,0.1523,Hoàn thành,False
+2013B,C01,165,0.4545,Không hoàn thành,False
+2013B,C02,197,0.1523,Hoàn thành,False
+2013B,C02,165,0.4545,Không hoàn thành,False
+2013B,C03,197,0.1472,Hoàn thành,False
+2013B,C03,165,0.5152,Không hoàn thành,False
+2013B,C04,197,0.269,Hoàn thành,False
+2013B,C04,165,0.5212,Không hoàn thành,False
+2013B,C05,197,0.269,Hoàn thành,False
+2013B,C05,165,0.5212,Không hoàn thành,False
+2013B,C07,197,0.1472,Hoàn thành,False
+2013B,C07,165,0.5152,Không hoàn thành,False
+2013B,C08,197,0.1472,Hoàn thành,False
+2013B,C08,165,0.5152,Không hoàn thành,False
+2013J,C01,218,0.1606,Hoàn thành,False
+2013J,C01,145,0.4759,Không hoàn thành,False
+2013J,C02,218,0.1606,Hoàn thành,False
+2013J,C02,145,0.4759,Không hoàn thành,False
+2013J,C03,218,0.2431,Hoàn thành,False
+2013J,C03,145,0.4276,Không hoàn thành,False
+2013J,C04,218,0.2661,Hoàn thành,False
+2013J,C04,145,0.5931,Không hoàn thành,False
+2013J,C05,218,0.2661,Hoàn thành,False
+2013J,C05,145,0.5931,Không hoàn thành,False
+2013J,C07,218,0.2431,Hoàn thành,False
+2013J,C07,145,0.4276,Không hoàn thành,False
+2013J,C08,218,0.2431,Hoàn thành,False
+2013J,C08,145,0.4276,Không hoàn thành,False
+2014B,C01,189,0.1852,Hoàn thành,False
+2014B,C01,171,0.4737,Không hoàn thành,False
+2014B,C02,189,0.1852,Hoàn thành,False
+2014B,C02,171,0.4737,Không hoàn thành,False
+2014B,C03,189,0.2222,Hoàn thành,False
+2014B,C03,171,0.5263,Không hoàn thành,False
+2014B,C04,189,0.2963,Hoàn thành,False
+2014B,C04,171,0.614,Không hoàn thành,False
+2014B,C05,189,0.2963,Hoàn thành,False
+2014B,C05,171,0.614,Không hoàn thành,False
+2014B,C07,189,0.2222,Hoàn thành,False
+2014B,C07,171,0.5263,Không hoàn thành,False
+2014B,C08,189,0.2222,Hoàn thành,False
+2014B,C08,171,0.5263,Không hoàn thành,False
+train+valid,C01,604,0.1656,Hoàn thành,False
+train+valid,C01,481,0.4678,Không hoàn thành,False
+train+valid,C02,604,0.1656,Hoàn thành,False
+train+valid,C02,481,0.4678,Không hoàn thành,False
+train+valid,C03,604,0.2053,Hoàn thành,False
+train+valid,C03,481,0.4927,Không hoàn thành,False
+train+valid,C04,604,0.2765,Hoàn thành,False
+train+valid,C04,481,0.5759,Không hoàn thành,False
+train+valid,C05,604,0.2765,Hoàn thành,False
+train+valid,C05,481,0.5759,Không hoàn thành,False
+train+valid,C07,604,0.2053,Hoàn thành,False
+train+valid,C07,481,0.4927,Không hoàn thành,False
+train+valid,C08,604,0.2053,Hoàn thành,False
+train+valid,C08,481,0.4927,Không hoàn thành,False
