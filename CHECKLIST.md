@@ -55,15 +55,22 @@
 - [ ] **P2** – xem các hình EDA, bỏ/sửa hình không nói được gì (cần ≥ 8 hình)
 - [ ] **P2** – viết cột **Insight** cho từng hình trong `reports/eda_findings.md`
 - [ ] **P3** – đọc `reports/model_results.md`
-  - Recall test: `____` (≥ 0.80?) · F1 test: `____` (≥ 0.75?) · Mô hình chính: `____`
+  - Hiện có 11 hình. Gợi ý: `aq6_concept_gaps` chưa phân biệt được concept ở Tuần 6 (3 concept cùng 20%), có thể bỏ hoặc chỉ giữ để minh hoạ
+  - Recall test: `0.805` (đạt) · F1 test: `0.661` (chưa đạt) · Mô hình chính: `gboost`
+  - Có nháp (Claude): 11 insight trong `docs/eda_insights.md`, pipeline tự ghép vào report. Chờ P2 rà
   - ⚠️ KHÔNG chỉnh ngưỡng trên tập test
 - [ ] **P3** – viết error analysis từ `reports/false_negative_analysis.csv`
 - [ ] **P3** – điền `docs/templates/model_design_card.md`
 - [ ] **P4** – đọc `reports/fairness_report.md`, chốt ngưỡng chênh lệch Recall, viết nhận định
+  - Có nháp (Claude): cuối `docs/templates/model_design_card.md`. Chờ P3 rà
 - [ ] **P4** – chọn ngưỡng cảnh báo (bảng AQ12) và phương án ưu tiên (bảng AQ10)
+  - Có nháp (Claude). Chờ P3 rà
   - Ngưỡng chọn: `____ %` · Phương án: `____`
+  - Có nháp (Claude): `docs/04_governance.md` mục "Fairness audit AQ9". Đề xuất ngưỡng > 0.10 với nhóm ≥ 30 sinh viên y=1. P4 chốt
 
 ## Ngày 4 – Viết tài liệu kỹ thuật
+  - ⚠️ CHƯA chọn: `prioritize.py` đang tính bảng AQ10/AQ12 trên tập TEST. Chọn từ hai bảng này là
+    chọn tham số bằng test (vi phạm quy tắc 3). Cần sửa code để tính trên valid trước, rồi mới chọn
 
 - [ ] **P2** – Data Story 1–2 trang theo 6 chương (`docs/05_data_story.md`)
 - [ ] **P2** – Dashboard wireframe = chụp màn hình Streamlit + chú thích
