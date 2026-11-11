@@ -17,6 +17,8 @@ paths:
   figures_dir: reports/figures
   kg_dir: kg
   audit_log: reports/audit_log.jsonl
+  dq_notes: docs/data_quality_notes.md    # nhóm viết → mục 6 của data_quality_report.md
+  eda_insights: docs/eda_insights.md      # nhóm viết → cột Insight của eda_findings.md
 
 # --- Phạm vi phân tích -------------------------------------------------------
 # Chọn module có đủ 4 lượt giảng dạy (BBB, DDD, FFF...) để chia theo thời gian.
