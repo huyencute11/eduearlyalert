@@ -22,14 +22,17 @@
 ## Ngày 1 – Setup + chốt dữ liệu (cả nhóm phải xong trong ngày)
 
 - [ ] **Tất cả** – clone repo, cài môi trường, chạy `make fake` + `make pipeline` thấy chạy được
-  - [ ] P1 · [ ] P2 · [ ] P3 · [ ] P4
+  - [x] P1 · [ ] P2 · [ ] P3 · [ ] P4
 - [ ] **Tất cả** – tạo `.env`, dùng CHUNG `EDU_SALT` (gửi riêng, không commit)
-- [ ] **P1** – tải OULAD, xoá dữ liệu giả trong `data/raw/`, đặt 7 file CSV vào
-- [ ] **P1** – chạy `python -m eduearlyalert.pipeline audit`, đọc `reports/module_presentation_counts.csv`
-- [ ] **Cả nhóm** – chốt module (ưu tiên BBB/DDD/FFF, có bài đánh giá trước ngày 41)
-  - Module đã chốt: `____` · Train: `____` · Valid: `____` · Test: `____`
+  - P1 đã tạo `.env` + salt; còn chờ gửi salt cho P2–P4
+- [x] **P1** – tải OULAD, xoá dữ liệu giả trong `data/raw/`, đặt 7 file CSV vào
+- [x] **P1** – chạy `python -m eduearlyalert.pipeline audit`, đọc `reports/module_presentation_counts.csv`
+- [x] **Cả nhóm** – chốt module (ưu tiên BBB/DDD/FFF, có bài đánh giá trước ngày 41)
+  - Module đã chốt: `FFF` · Train: `2013B, 2013J` · Valid: `2014B` · Test: `2014J`
+  - Lý do bỏ BBB: ở 2014J bài TMA đầu kỳ có weight = 0, điểm gần nhị phân (1/100), khác 3 lượt còn lại (xem PR #2)
 - [ ] **P1** – sửa `config.yaml`, push lên `main`, báo group
-- [ ] **P1** – chạy `pipeline all` trên dữ liệu thật không lỗi
+  - Đã sửa trong PR #2, chờ duyệt + merge
+- [x] **P1** – chạy `pipeline all` trên dữ liệu thật không lỗi
 
 ## Ngày 2 – Nền dữ liệu + KG
 
