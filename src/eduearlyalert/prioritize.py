@@ -1,10 +1,13 @@
 """AQ10–AQ12 – Ưu tiên liên hệ trong giới hạn năng lực cố vấn, gợi ý loại hỗ trợ, ngưỡng cảnh báo.
 
-Đánh giá trên TEST (đã biết nhãn) để so sánh phương án. Risk List xuất ra là
+Chọn phương án (AQ10) và cung cấp bảng để nhóm chọn ngưỡng (AQ12) trên VALID. TEST chỉ dùng để
+báo cáo kết quả cuối (`*_test.csv`), không bao giờ dùng để chọn – quy tắc 3 trong CLAUDE.md.
+Risk List mô phỏng học kỳ hiện tại = lượt test, xếp theo phương án đã chọn trên valid. Đây là
 DANH SÁCH ĐỀ XUẤT – mọi dòng ở trạng thái `pending_review`, cần cố vấn phê duyệt.
 
 Output:
-  reports/aq10_strategy_comparison.csv, reports/aq12_threshold_scenarios.csv
+  reports/aq10_strategy_comparison.csv, reports/aq12_threshold_scenarios.csv   (valid – để chọn)
+  reports/aq10_strategy_comparison_test.csv, reports/aq12_threshold_scenarios_test.csv   (test – chỉ báo cáo)
   reports/prioritization_report.md, reports/risk_list.csv
   reports/figures/aq10_coverage_at_k.png, reports/figures/aq12_tradeoff.png
 """
@@ -45,6 +48,33 @@ def coverage_precision_at_k(y: pd.Series, score: pd.Series, k: int) -> tuple[flo
     return hit / max(y.sum(), 1), hit / max(len(top), 1)
 
 
+def compare_strategies(d: pd.DataFrame, k: int) -> pd.DataFrame:
+    """AQ10 – Coverage@K và Precision@K của từng phương án trên một tập."""
+    rows = []
+    for name, s in strategy_scores(d).items():
+        cov, prec = coverage_precision_at_k(d["y"], s, k)
+        rows.append({"strategy": name, "K": k, "coverage_at_K": round(cov, 3), "precision_at_K": round(prec, 3)})
+    return pd.DataFrame(rows)
+
+
+def select_strategy(valid_comp: pd.DataFrame) -> str:
+    """Phương án có Coverage@K cao nhất trên VALID; hoà thì lấy Precision@K, rồi phương án đơn giản hơn (A trước)."""
+    ranked = valid_comp.sort_values(["coverage_at_K", "precision_at_K"], ascending=False, kind="stable")
+    return str(ranked.iloc[0]["strategy"])
+
+
+def threshold_scenarios(d: pd.DataFrame, shares: list[float], k: int) -> pd.DataFrame:
+    """AQ12 – kịch bản cảnh báo top x% theo điểm rủi ro trên một tập."""
+    sc = []
+    for share in shares:
+        n_alert = int(round(share * len(d)))
+        cov, prec = coverage_precision_at_k(d["y"], d["score_main"], n_alert)
+        sc.append({"alert_share": share, "n_alerted": n_alert, "recall": round(cov, 3),
+                   "precision": round(prec, 3), "false_alarms": int(round(n_alert * (1 - prec))),
+                   "weeks_of_advisor_capacity": round(n_alert / k, 2), "fits_capacity": n_alert <= k})
+    return pd.DataFrame(sc)
+
+
 def support_type(row: dict, gaps: list[str]) -> str:
     """AQ11 – luật quyết định loại hỗ trợ (đề xuất, cố vấn quyết định cuối cùng)."""
     if row.get("tier") == "Rất cao" and row.get("engagement_change", 0) < -0.5:
@@ -64,58 +94,58 @@ def run(cfg: Config) -> dict:
     feats, _ = feat_mod.load(cfg)
     reasons = pd.read_parquet(processed / "reason_codes.parquet")
     keys = ["pid", "code_presentation"]
-    d = (preds[preds["split"] == "test"]
-         .merge(feats.drop(columns=["y", "split"]), on=keys)
-         .merge(reasons, on=keys, how="left")
-         .reset_index(drop=True))
+
+    def frame(split: str) -> pd.DataFrame:
+        return (preds[preds["split"] == split]
+                .merge(feats.drop(columns=["y", "split"]), on=keys)
+                .merge(reasons, on=keys, how="left")
+                .reset_index(drop=True))
+
+    dv, d = frame("valid"), frame("test")   # dv: để chọn · d: học kỳ hiện tại (Risk List) + báo cáo
+    if dv.empty:
+        raise ValueError("Không có dự đoán cho tập valid – không thể chọn phương án/ngưỡng mà không dùng test.")
 
     adv = cfg["advisor"]
     K = adv["k_per_advisor"] * adv["n_advisors"]
+
+    # ---- AQ10: chọn phương án trên VALID, báo cáo trên TEST ------------------
+    comp = compare_strategies(dv, K)
+    best = select_strategy(comp)
+    comp.to_csv(reports / "aq10_strategy_comparison.csv", index=False)
+    comp_test = compare_strategies(d, K)
+    comp_test.to_csv(reports / "aq10_strategy_comparison_test.csv", index=False)
     strategies = strategy_scores(d)
 
-    # ---- AQ10: so sánh phương án tại K --------------------------------------
-    rows = []
-    for name, s in strategies.items():
-        cov, prec = coverage_precision_at_k(d["y"], s, K)
-        rows.append({"strategy": name, "K": K, "coverage_at_K": round(cov, 3), "precision_at_K": round(prec, 3)})
-    comp = pd.DataFrame(rows).sort_values("coverage_at_K", ascending=False)
-    comp.to_csv(reports / "aq10_strategy_comparison.csv", index=False)
-    best = comp.iloc[0]["strategy"]
-
-    ks = np.unique(np.linspace(5, len(d), 40).astype(int))
+    strategies_v = strategy_scores(dv)
+    ks = np.unique(np.linspace(5, len(dv), 40).astype(int))
     fig, ax = plt.subplots(figsize=(7, 4))
-    for name, s in strategies.items():
-        ax.plot(ks, [coverage_precision_at_k(d["y"], s, k)[0] for k in ks], label=name)
-    ax.plot(ks, ks / len(d), ls=":", color="#aaa", label="chọn ngẫu nhiên")
+    for name, s in strategies_v.items():
+        ax.plot(ks, [coverage_precision_at_k(dv["y"], s, k)[0] for k in ks], label=name)
+    ax.plot(ks, ks / len(dv), ls=":", color="#aaa", label="chọn ngẫu nhiên")
     ax.axvline(K, ls="--", color="#d73027")
     ax.text(K, 0.02, f" K={K}", color="#d73027", fontsize=8)
     ax.set(xlabel="Số sinh viên được liên hệ (K)", ylabel="Coverage@K",
-           title="AQ10 · Tỷ lệ sinh viên cần hỗ trợ được tiếp cận theo K")
+           title="AQ10 · Tỷ lệ sinh viên cần hỗ trợ được tiếp cận theo K (valid)")
     ax.legend(frameon=False, fontsize=8)
     plotting.save(fig, figdir / "aq10_coverage_at_k.png")
 
-    # ---- AQ12: kịch bản ngưỡng cảnh báo -------------------------------------
-    sc = []
-    for share in adv["alert_shares"]:
-        n_alert = int(round(share * len(d)))
-        cov, prec = coverage_precision_at_k(d["y"], d["score_main"], n_alert)
-        sc.append({"alert_share": share, "n_alerted": n_alert, "recall": round(cov, 3),
-                   "precision": round(prec, 3), "false_alarms": int(round(n_alert * (1 - prec))),
-                   "weeks_of_advisor_capacity": round(n_alert / K, 2), "fits_capacity": n_alert <= K})
-    scen = pd.DataFrame(sc)
+    # ---- AQ12: kịch bản ngưỡng – bảng để CHỌN là valid -----------------------
+    scen = threshold_scenarios(dv, adv["alert_shares"], K)
     scen.to_csv(reports / "aq12_threshold_scenarios.csv", index=False)
+    scen_test = threshold_scenarios(d, adv["alert_shares"], K)
+    scen_test.to_csv(reports / "aq12_threshold_scenarios_test.csv", index=False)
 
     shares = np.linspace(0.02, 0.6, 30)
-    rec = [coverage_precision_at_k(d["y"], d["score_main"], int(s * len(d)))[0] for s in shares]
+    rec = [coverage_precision_at_k(dv["y"], dv["score_main"], int(s * len(dv)))[0] for s in shares]
     fig, ax1 = plt.subplots(figsize=(7, 4))
     ax1.plot(shares * 100, rec, color="#4575b4", label="Recall")
     ax1.axhline(cfg["acceptance"]["recall_min"], ls=":", color="#4575b4")
     ax1.set(xlabel="% sinh viên được cảnh báo", ylabel="Recall")
     ax2 = ax1.twinx()
-    ax2.plot(shares * 100, shares * len(d), color="#d73027", label="Số ca")
+    ax2.plot(shares * 100, shares * len(dv), color="#d73027", label="Số ca")
     ax2.axhline(K, ls="--", color="#d73027")
     ax2.set_ylabel("Số ca cần liên hệ (đỏ đứt = năng lực K/tuần)")
-    ax1.set_title("AQ12 · Đánh đổi Recall – khối lượng công việc cố vấn")
+    ax1.set_title("AQ12 · Đánh đổi Recall – khối lượng công việc cố vấn (valid)")
     plotting.save(fig, figdir / "aq12_tradeoff.png")
 
     # ---- Risk List (AQ10 + AQ11) --------------------------------------------
@@ -154,21 +184,34 @@ def run(cfg: Config) -> dict:
     md = [
         "# Ưu tiên hỗ trợ – AQ10, AQ11, AQ12 (tự sinh)",
         "",
-        f"Tập test, n = {len(d)} sinh viên còn theo học tại ngày {cfg.cutoff_day}; "
-        f"số cần hỗ trợ thực tế = {int(d['y'].sum())}. Năng lực K = {adv['k_per_advisor']} × {adv['n_advisors']} cố vấn "
-        f"= **{K} ca/tuần** (ASSUMPTION).",
+        f"Chọn trên **valid** {cfg.presentations('valid')} (n = {len(dv)}, cần hỗ trợ = {int(dv['y'].sum())}). "
+        f"Test {cfg.presentations('test')} (n = {len(d)}, cần hỗ trợ = {int(d['y'].sum())}) chỉ để báo cáo và "
+        f"mô phỏng Risk List của học kỳ hiện tại. Sinh viên còn theo học tại ngày {cfg.cutoff_day}. "
+        f"Năng lực K = {adv['k_per_advisor']} × {adv['n_advisors']} cố vấn = **{K} ca/tuần** (ASSUMPTION).",
         "",
         "## AQ10 – So sánh phương án ưu tiên",
         "",
+        "Valid (dùng để chọn):",
+        "",
         comp.to_markdown(index=False),
         "",
-        f"Phương án có Coverage@K cao nhất: **{best}**.",
+        f"Phương án chọn trên valid (Coverage@K cao nhất; hoà thì Precision@K, rồi phương án đơn giản hơn): **{best}**.",
+        "",
+        "Test (chỉ báo cáo, không dùng để chọn):",
+        "",
+        comp_test.to_markdown(index=False),
         "",
         "![](figures/aq10_coverage_at_k.png)",
         "",
         "## AQ12 – Kịch bản ngưỡng cảnh báo",
         "",
+        "Valid (nhóm chọn ngưỡng từ bảng này):",
+        "",
         scen.to_markdown(index=False),
+        "",
+        "Test (chỉ báo cáo):",
+        "",
+        scen_test.to_markdown(index=False),
         "",
         "![](figures/aq12_tradeoff.png)",
         "",

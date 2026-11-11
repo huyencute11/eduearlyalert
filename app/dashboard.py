@@ -751,7 +751,7 @@ def advisor_view(reviewer: str) -> None:
         with st.expander("Vì sao xếp theo điểm rủi ro? So sánh 3 cách xếp ưu tiên"):
             evidence(f"Với {int(sc['K'].iloc[0])} ca/tuần, cách nào tiếp cận được nhiều người cần hỗ trợ nhất?",
                      "Cách A (chỉ theo điểm rủi ro) bao phủ nhiều nhất và chính xác nhất nên được dùng cho danh sách trên.",
-                     strategy_chart(sc), "AQ10 · reports/aq10_strategy_comparison.csv (học kỳ kiểm tra)")
+                     strategy_chart(sc), "AQ10 · reports/aq10_strategy_comparison.csv (tập valid – dùng để chọn)")
 
 
 # ---------------------------------------------------------------------------
