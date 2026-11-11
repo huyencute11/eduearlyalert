@@ -37,13 +37,18 @@
 ## Ngày 2 – Nền dữ liệu + KG
 
 - [ ] **P1** – điền mục 6 "Nhận định & xử lý" trong `reports/data_quality_report.md`
+  - Có nháp (Claude): viết trong `docs/data_quality_notes.md`, pipeline tự ghép vào report. Chờ P1 rà
 - [ ] **P1** – viết Data Inventory (nguồn, format, owner, thời gian, rủi ro)
+  - Có nháp (Claude): `docs/02_data.md` mục 6. Chờ P1 rà
 - [ ] **P1** – rà `docs/02_data.md` làm Data Dictionary; ghi số liệu từ `reports/cohort_flow.csv`
+  - Có nháp (Claude): bảng cohort FFF trong mục 3. Chờ P1 rà
 - [ ] **P1** – cập nhật baseline Completion Rate thật vào `docs/01_project_overview.md`
-  - Completion rate thật: `____ %`
+  - Completion rate thật: `46,9 %` (FFF, train + valid). Có nháp, chờ P1 rà; cần chốt lại mục tiêu 68%
 - [ ] **P3** – sửa `kg/concept_map.csv` đúng các bài của module đã chọn, chạy lại `pipeline kg eda`
+  - Có nháp (Claude, PR #2): FFF TMA1–TMA5. Chờ P3 rà; `concepts.yaml` vẫn thiên về KHXH
 - [ ] **P2** – tạo khung Final Report đủ 18 mục (Docs chung), chia ai viết mục nào
 - [ ] **P4** – hoàn thiện Risk Register ≥ 6 rủi ro (`docs/04_governance.md`)
+  - Có nháp (Claude): thêm R10 (lệch thiết kế giữa các lượt), R11 (precision thấp). Đã có 11 rủi ro. Chờ P4 rà
 
 ## Ngày 3 – Phân tích
 

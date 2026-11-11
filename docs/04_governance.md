@@ -55,3 +55,9 @@ trong reason codes và Risk List. Trong báo cáo dùng "liên hệ/khác biệt
 | R7 | Diễn giải KG mô phỏng như dữ liệu thật | TB | TB | Nhãn "MÔ PHỎNG" trên hình, provenance trong triples | Modeling/KG |
 | R8 | Danh sách quá dài so với năng lực cố vấn | Cao | TB | Top-K, phân tầng, AQ12 | Eval & Gov |
 | R9 | Rò rỉ dữ liệu qua git / notebook output | TB | TB | `.gitignore`, clear output, salt trong `.env` | Cả nhóm |
+| R10 | Thiết kế môn/bài đánh giá thay đổi giữa các lượt, làm mô hình học ở lượt cũ không còn đúng ở lượt mới (đã xảy ra: BBB 2014J có TMA đầu kỳ trọng số 0, Recall giảm từ 0.80 trên valid xuống 0.53 trên test) | TB | Cao | Bước audit so sánh `assessments` giữa các lượt trước khi chạy mô hình; chọn FFF vì thiết kế ổn định; khi triển khai thì huấn luyện lại mỗi lượt | Problem & Data |
+| R11 | Precision thấp nên cố vấn mất công liên hệ những người không cần hỗ trợ (FFF test: F1 0.66 < 0.75, precision khoảng 0.56) | Cao | TB | Không chỉnh ngưỡng trên test; dùng Top-K và phân tầng (AQ10, AQ12) để giới hạn khối lượng; ghi rõ là "chưa đạt" trong report | Modeling + Eval & Gov |
+
+> **BẢN NHÁP – P4 cần rà.** R10 và R11 do Claude thêm ngày 11/11/2026 từ `reports/model_results.md` (module FFF)
+> và lần chạy thử BBB. Với R3, kết quả FFF hiện có chênh lệch Recall lớn nhất ở `highest_education` (0.33),
+> `region` (0.19) và `imd_band` (0.18) (`reports/fairness_report.md`). P4 cần chốt ngưỡng chênh lệch chấp nhận được (Ngày 3).
