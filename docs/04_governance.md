@@ -26,6 +26,33 @@ bằng chứng cho phần Governance của Final Report.
 | G3 – Fairness | Sau `fairness` | Eval & Governance Lead | Chênh lệch Recall trong ngưỡng đã thống nhất, hoặc có hành động |
 | G4 – Từng ca | Mỗi tuần, trên dashboard | Cố vấn | Phê duyệt / bỏ qua kèm ghi chú; không liên hệ khi chưa duyệt |
 
+## Fairness audit AQ9 – nhận định (G3)
+
+> **BẢN NHÁP – P4 cần rà và chốt.** Claude soạn ngày 11/11/2026 từ `reports/fairness_report.md` và
+> `reports/fairness_by_group.csv` (FFF, tập test, Recall chung 0,805). Ngưỡng đề xuất dưới đây là gợi ý,
+> P4 và cả nhóm cần quyết định.
+
+**Vấn đề khi đọc bảng:** `min_group_size = 10` tính theo số sinh viên, nhưng Recall chỉ được tính trên số
+sinh viên y=1 của nhóm. Nhiều nhóm chỉ có vài chục, thậm chí vài sinh viên y=1, nên Recall dao động rất mạnh.
+Ví dụ, với 44 sinh viên y=1 và Recall khoảng 0,8, sai số chuẩn khoảng 0,06, tức khoảng tin cậy 95% rộng chừng ±0,12.
+
+| Thuộc tính | Chênh lệch trong report | Nhận định |
+|---|---:|---|
+| `highest_education` | 0,33 | Do hai nhóm rất nhỏ: Post Graduate (n = 13, khoảng 3 sinh viên y=1, Recall 0,67) và No Formal quals (n = 10, khoảng 4 sinh viên y=1, Recall 1,0). Ba nhóm lớn chỉ chênh 0,78–0,83, khoảng 0,04 |
+| `region` | 0,19 | Thấp nhất East Anglian (0,705, 44 y=1), cao nhất South West (0,896, 48 y=1). Cả hai nhóm đều nhỏ, nên chênh lệch còn trong vùng dao động ngẫu nhiên. Cần theo dõi, chưa đủ bằng chứng để kết luận |
+| `imd_band` | 0,18 | Thấp nhất 30–40% (0,714, 77 y=1), cao nhất là nhóm "Không rõ" (0,895, chỉ 19 y=1). Không thấy xu hướng theo mức thiếu thốn: nhóm 0–10% có 0,824 |
+| `gender` | 0,08 | F 0,736 (n = 345, khoảng 121 y=1) so với M 0,819 (n = 1.489). Hai nhóm đủ lớn, nên đây là **chênh lệch đáng chú ý nhất**: mô hình bỏ sót sinh viên nữ nhiều hơn (FNR 0,26 so với 0,18). FFF có ít sinh viên nữ (19%) |
+| `age_band`, `disability` | ≤ 0,01 | Không có chênh lệch đáng kể. Nhóm 55+ (n = 9) đã bị ẩn |
+
+**Ngưỡng đề xuất (P4 chốt):** chênh lệch Recall > 0,10 giữa hai nhóm **cùng có ≥ 30 sinh viên y=1** thì
+phải có hành động. Nhóm nhỏ hơn chỉ báo cáo, không kết luận. Theo ngưỡng này, chưa thuộc tính nào vượt; `gender`
+(0,08) gần ngưỡng nhất và nên ghi vào báo cáo.
+
+**Hành động đề xuất:** (1) Ghi rõ chênh lệch theo `gender` trong Final Report và Limitations. (2) Không đưa
+thuộc tính nhạy cảm vào mô hình để "sửa" (Fairness Gate). Thay vào đó, khi cố vấn duyệt Risk List, xem thêm
+danh sách gần ngưỡng (tầng "Theo dõi"). (3) Báo cáo khoảng tin cậy Recall theo nhóm. Đây là việc cần sửa
+`fairness.py` và có thể làm sau.
+
 ## Quy tắc ngôn ngữ
 
 Không dùng: "sinh viên yếu/kém", "lười", "học dốt". Dùng: "sinh viên cần hỗ trợ thêm ở concept X",
