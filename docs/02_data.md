@@ -33,6 +33,11 @@ Chạy `python -m eduearlyalert.pipeline audit`, mở `reports/module_presentati
 và chọn module thoả: đủ 4 presentation, đủ sinh viên, `n_assess_before_cutoff ≥ 1`.
 Sửa `config.yaml › scope`, commit kèm lý do. **Chốt một lần cho cả nhóm.**
 
+> **BẢN NHÁP – P1 cần rà.** **Đã chốt: FFF**, train 2013B và 2013J, valid 2014B, test 2014J (PR #2).
+> Ban đầu nhóm dự định chọn BBB, nhưng ở BBB 2014J bài TMA đầu kỳ có trọng số 0 và điểm gần như chỉ 1/100,
+> khác với ba lượt còn lại. FFF có thiết kế giống nhau ở cả 4 lượt: 1 bài TMA trọng số 12.5,
+> hạn ngày 19 (2013) hoặc ngày 24 (2014). Lý do chọn đến từ metadata `assessments.csv`, không dựa trên kết quả test.
+
 ## 3. Cohort và nhãn (`cohort.py`)
 
 | Khái niệm | Định nghĩa |
@@ -45,6 +50,18 @@ Sửa `config.yaml › scope`, commit kèm lý do. **Chốt một lần cho cả
 | `pid` | SHA-256(salt + id_student), 10 ký tự hex, tiền tố `S` |
 
 `reports/cohort_flow.csv` ghi số dòng bị loại ở từng bước – đưa vào phần Data Quality của report.
+
+**Cohort FFF** (số liệu chép từ `reports/cohort_flow.csv` ngày 11/11/2026; chạy lại pipeline thì đối chiếu lại):
+
+| Lượt | Split | Đăng ký | Rút trước ngày 41 | Đăng ký sau ngày 41 | Quần thể dự báo | Tỷ lệ y=1 (toàn bộ) | Tỷ lệ y=1 (quần thể dự báo) |
+|---|---|---:|---:|---:|---:|---:|---:|
+| 2013B | train | 1.614 | 181 | 0 | 1.433 | 51,5% | 45,4% |
+| 2013J | train | 2.283 | 333 | 0 | 1.950 | 52,0% | 43,8% |
+| 2014B | valid | 1.500 | 217 | 0 | 1.283 | 56,4% | 49,0% |
+| 2014J | test | 2.365 | 530 | 1 | 1.834 | 52,8% | 39,1% |
+
+Tập test (2014J) có nhiều người rút trước ngày 41 nhất (22%). Vì vậy tỷ lệ y=1 trong quần thể dự báo
+của test thấp hơn các tập khác. Điều này ảnh hưởng tới precision và F1 trên test (xem rủi ro R11).
 
 ## 4. Data dictionary – feature (`features.py`)
 
@@ -79,3 +96,22 @@ Mọi feature chỉ dùng dữ liệu có ngày ≤ 41. Tuần: `date < 0 → 0`
 `kg/concepts.yaml` và `kg/concept_map.csv` do nhóm tự xây dựng. Khoá ánh xạ là
 `assessment_key` (TMA1, CMA2… theo thứ tự hạn nộp), nên một bảng dùng cho mọi presentation.
 Sau khi chọn module, mở `reports/kg_competency_questions.md` để xem bài nào chưa được ánh xạ.
+
+## 6. Data Inventory
+
+> **BẢN NHÁP – P1 cần rà.**
+
+| Nguồn | Nội dung | Format · kích thước | Owner | Thời gian | Truy cập | Rủi ro |
+|---|---|---|---|---|---|---|
+| OULAD `studentInfo` | Nhân khẩu, kết quả cuối kỳ (`final_result`) | CSV · 32.593 dòng | Open University (KMi); trong nhóm: P1 | 2013–2014 (4 lượt FFF) | Công khai, CC-BY 4.0 | Thuộc tính nhạy cảm (chỉ cho AQ9); `final_result` là nhãn, không phải feature |
+| OULAD `studentRegistration` | Ngày đăng ký và ngày rút môn | CSV · 32.593 dòng | như trên | như trên | như trên | `date_unregistration` gây leakage nếu dùng làm feature |
+| OULAD `courses` | Module × lượt, độ dài lượt | CSV · 22 dòng | như trên | như trên | như trên | `module_presentation_length` là thông tin tương lai |
+| OULAD `assessments` | Bài đánh giá, hạn nộp, trọng số | CSV · 206 dòng | như trên | như trên | như trên | Thiết kế bài khác nhau giữa các lượt (Q1); Exam không có `date` |
+| OULAD `studentAssessment` | Ngày nộp, điểm, `is_banked` | CSV · 173.912 dòng | như trên | như trên | như trên | Bài banked; điểm thiếu |
+| OULAD `vle` | Tài nguyên VLE và loại hoạt động | CSV · 6.364 dòng | như trên | như trên | như trên | `week_from/to` phần lớn bị thiếu |
+| OULAD `studentVle` | Click theo ngày × tài nguyên | CSV · 10.655.280 dòng (~430 MB) | như trên | như trên | như trên | Không có khoá duy nhất; đuôi click rất dài |
+| `kg/concepts.yaml`, `kg/concept_map.csv` | Concept, CLO, ánh xạ bài → concept | YAML/CSV · vài chục dòng | Nhóm 3 (P3) | 11/2026 | Trong repo | **MÔ PHỎNG**, không phải chương trình thật; concept thiên về KHXH trong khi FFF là môn STEM |
+| `data/raw/_fake_backup/`, `scripts/make_fake_oulad.py` | Dữ liệu giả cùng schema để test | CSV | Nhóm 3 | – | Trong repo (script) | Không dùng cho báo cáo |
+
+Dữ liệu thô (`data/`) không bao giờ được commit. `id_student` được thay bằng `pid` (SHA-256 + `EDU_SALT`)
+trước khi ghi ra `data/processed/` và `reports/`.
