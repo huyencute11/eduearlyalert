@@ -3,7 +3,9 @@
 <!--
 Khung theo "Milestone P5 – Final Integration & Project Report" (MTH045). Cấu trúc: Abstract, mục 1–14,
 Traceability Matrix (bắt buộc), AQ Revision Log, bảng trả lời theo AQ, AI Decision Log, phụ lục.
-Độ dài phần chính: 15–25 trang. Xuất DOCX/PDF: pandoc docs/final_report.md -o final_report.docx
+Độ dài phần chính: 15–25 trang. Xuất DOCX (chạy ở thư mục gốc repo, cần pandoc):
+  pandoc docs/final_report.md -f gfm --resource-path=docs -o final_report.docx
+rồi mở bằng Word/Google Docs → Save as PDF. Hình 1–14 lấy từ reports/figures/ (tự sinh): chạy lại pipeline thì hình tự cập nhật.
 
 QUY TẮC VIẾT (từ P5 + CLAUDE.md):
 - Viết lại thành MỘT câu chuyện; không dán nguyên 4 milestone.
@@ -210,6 +212,10 @@ metadata `assessments.csv` (xem Q1, mục 6). FFF có 7.762 lượt đăng ký c
 | 2014B | valid | 1.500 | 43,6% | 30,8% |
 | 2014J | test | 2.365 | 47,2% | 36,2% |
 
+![Hình 1](../reports/figures/aq1_outcomes_by_presentation.png)
+
+*Hình 1 – Kết quả cuối môn theo lượt giảng dạy. Nguồn: OULAD (Kuzilek et al., 2017), module FFF, train + valid; `reports/figures/aq1_outcomes_by_presentation.png`.*
+
 **Bảng 5.3 – AQ–Data Fit Matrix.**
 
 | AQ | Dữ liệu thực tế | Độ phù hợp | Trạng thái |
@@ -249,6 +255,14 @@ Các giá trị thiếu ảnh hưởng tới phân tích đều nhỏ:
 - 256.062 dòng click có ngày âm, tức là hoạt động trước khi môn bắt đầu (Q3).
 - Điểm TMA1 lệch về phía cao, trung vị 82 (`reports/eda_findings.md`, hình AQ3).
 
+![Hình 2](../reports/figures/aq2_heatmap_week_activity.png)
+
+*Hình 2 – Click trung bình mỗi sinh viên theo tuần (cột "Trước": trước ngày 0) và loại tài nguyên VLE; màu theo thang log. Nguồn: OULAD (Kuzilek et al., 2017), module FFF, train + valid; `reports/figures/aq2_heatmap_week_activity.png`.*
+
+![Hình 3](../reports/figures/aq3_score_distribution.png)
+
+*Hình 3 – Phân bố điểm TMA1 của các bài đã nộp (đường đứt: ngưỡng đạt 40). Nguồn: OULAD (Kuzilek et al., 2017), module FFF, train + valid; `reports/figures/aq3_score_distribution.png`.*
+
 **Mất cân bằng nhãn.** Tỷ lệ không hoàn thành (y = 1) là 51–56% trên toàn bộ đăng ký. Trong quần thể dự báo (sinh viên
 còn theo học tại ngày 41), tỷ lệ này là 39–49%, nên nhãn khá cân bằng. Nhóm vẫn ưu tiên PR-AUC và Recall thay cho
 accuracy (mục 9).
@@ -256,6 +270,10 @@ accuracy (mục 9).
 **Độ phủ thời gian.** Bốn lượt từ 2/2013 đến 10/2014, hai lượt bắt đầu tháng 2 (B) và hai lượt bắt đầu tháng 10 (J).
 Lượt test (2014J) có **tỷ lệ rút trước ngày 41 cao nhất (22%)**, so với 11–15% ở ba lượt kia. Vì vậy tỷ lệ y = 1 trong
 quần thể dự báo của test chỉ 39%, thấp hơn các tập khác. Sự khác biệt này có ảnh hưởng tới precision trên test (mục 10).
+
+![Hình 4](../reports/figures/aq1_cumulative_withdrawal.png)
+
+*Hình 4 – Tỷ lệ rút môn tích luỹ theo tuần. Nguồn: OULAD (Kuzilek et al., 2017), module FFF, train + valid; `reports/figures/aq1_cumulative_withdrawal.png`.*
 
 **Tính đại diện.** FFF là một môn STEM của Open University (Anh), với sinh viên chủ yếu học từ xa:
 - 81,8% là nam, 74% dưới 35 tuổi, 9,5% khai báo khuyết tật.
@@ -418,7 +436,23 @@ Ngưỡng **không** được chỉnh lại sau khi xem test.
    đổi** mô hình chính, vì lựa chọn đã được chốt trên valid.
 4. Precision trên test thấp hơn valid (0,56 so với 0,65), một phần vì tỷ lệ y = 1 trong quần thể dự báo của test
    thấp hơn (39% so với 49%; mục 6).
-5. Hình `aq7_roc_pr.png`, `aq7_confusion_matrix.png` và `aq7_calibration.png` ở Phụ lục.
+5. **Calibration (Hình 7):** ở hầu hết các khoảng, xác suất dự báo cao hơn tỷ lệ thực tế. Ví dụ, nhóm có xác suất
+   dự báo khoảng 0,66 chỉ có khoảng 50% thực sự không hoàn thành. Một phần là do mô hình huấn luyện với cân bằng lớp,
+   một phần do tỷ lệ y = 1 của test thấp hơn. Vì vậy điểm rủi ro nên được dùng để **xếp hạng**, không nên đọc như
+   xác suất. Dashboard và Risk List cũng chỉ dùng điểm này để xếp hạng.
+
+![Hình 5](../reports/figures/aq7_roc_pr.png)
+
+*Hình 5 – Đường ROC và Precision–Recall của luật, logistic và gboost. Nguồn: OULAD (Kuzilek et al., 2017), module FFF, test; `reports/figures/aq7_roc_pr.png`.*
+
+![Hình 6](../reports/figures/aq7_confusion_matrix.png)
+
+*Hình 6 – Confusion matrix của gboost tại ngưỡng 0,405 (chọn trên valid). Nguồn: OULAD (Kuzilek et al., 2017), module FFF, test; `reports/figures/aq7_confusion_matrix.png`.*
+
+![Hình 7](../reports/figures/aq7_calibration.png)
+
+*Hình 7 – Calibration của gboost (đường đứt: hiệu chuẩn hoàn hảo). Nguồn: OULAD (Kuzilek et al., 2017), module FFF, test; `reports/figures/aq7_calibration.png`.*
+
 
 **Một mâu thuẫn quan trọng cho triển khai.** Để đạt Recall 0,80, mô hình phải cảnh báo **56% sinh viên** của lượt test,
 tức 1.030 người. Năng lực giả định là 70 ca/tuần. Vì vậy, ở dạng "cảnh báo khi vượt ngưỡng", hệ thống không dùng được.
@@ -440,11 +474,19 @@ khi năng lực có hạn. Cả hai con số cần được trình bày cạnh n
   giá đầu tiên – nên hỏi thăm khó khăn".
 - Reason code cho biết **dấu hiệu trong dữ liệu**, không phải nguyên nhân sinh viên gặp khó khăn.
 
+![Hình 8](../reports/figures/aq7_feature_importance.png)
+
+*Hình 8 – Permutation importance (giảm PR-AUC khi xáo trộn feature). Nguồn: OULAD (Kuzilek et al., 2017), module FFF, valid; `reports/figures/aq7_feature_importance.png`.*
+
 **Fairness (AQ9).**
 - Recall chung trên test là 0,805.
 - Chênh lệch đáng chú ý nhất theo giới tính: nữ 0,736 (n = 345), nam 0,819 (n = 1.489).
 - Chênh lệch lớn hơn theo trình độ học vấn (0,33) đến từ hai nhóm chỉ có 3–4 sinh viên y = 1, nên không đủ tin cậy.
 - Theo ngưỡng đề xuất ở mục 9, chưa thuộc tính nào vượt ngưỡng. Nhận định chi tiết ở `docs/04_governance.md`.
+
+![Hình 9](../reports/figures/aq9_recall_by_group.png)
+
+*Hình 9 – Recall theo nhóm thuộc tính nhạy cảm (nhóm < 10 sinh viên bị ẩn). Nguồn: OULAD (Kuzilek et al., 2017), module FFF, test; `reports/figures/aq9_recall_by_group.png`.*
 
 **Ưu tiên (AQ10–AQ12).** Ba phương án AQ10 gần như như nhau ở K = 70. Trên valid, A và C hoà (Coverage@K 0,107), B
 thấp hơn một chút (0,103), nên nhóm chọn phương án đơn giản nhất là A. Theo bảng AQ12 trên valid:
@@ -455,6 +497,14 @@ Nhóm (P4) chốt **ngưỡng top 10%** dựa trên bảng valid, vì đây là 
 đầu danh sách, phần còn lại chuyển sang tuần sau hoặc tầng "Theo dõi". Báo cáo trên test (chỉ để tham khảo, không dùng
 để chọn): top 10% = 183 ca, Recall 0,237, precision 0,929. Mọi đánh giá ưu tiên chỉ dựa trên dữ liệu lịch sử, **không**
 chứng minh rằng liên hệ sẽ giúp sinh viên hoàn thành môn.
+
+![Hình 10](../reports/figures/aq10_coverage_at_k.png)
+
+*Hình 10 – Coverage@K của ba phương án ưu tiên (đường đứt: K = 70; đường A trùng C nên bị che). Nguồn: OULAD (Kuzilek et al., 2017), module FFF, valid; `reports/figures/aq10_coverage_at_k.png`.*
+
+![Hình 11](../reports/figures/aq12_tradeoff.png)
+
+*Hình 11 – Đánh đổi giữa Recall và số ca cần liên hệ theo % sinh viên được cảnh báo (đường đỏ đứt: năng lực 70 ca/tuần). Nguồn: OULAD (Kuzilek et al., 2017), module FFF, valid; `reports/figures/aq12_tradeoff.png`.*
 
 **Khả năng tái lập.** Cùng dữ liệu, cùng `config.yaml` và cùng seed thì cho cùng kết quả. Mỗi bước ghi vào
 `reports/audit_log.jsonl`. Chạy lại `pipeline all` trên các commit đã merge không làm thay đổi `reports/` (đã kiểm tra
@@ -486,6 +536,10 @@ khi tích hợp PR #5).
   - kế đến là tương tác giảm rõ ở Tuần 4–6 (AQ4: hai nhóm tách nhau mạnh nhất ở Tuần 5–6).
 - Cố vấn vẫn là người quyết định: Risk List chỉ là đề xuất ở trạng thái `pending_review`.
 
+![Hình 12](../reports/figures/aq4_weekly_median_clicks.png)
+
+*Hình 12 – Click trung vị theo tuần của nhóm hoàn thành và không hoàn thành. Nguồn: OULAD (Kuzilek et al., 2017), module FFF, train + valid; `reports/figures/aq4_weekly_median_clicks.png`.*
+
 **D2 – Lecturer: điều chỉnh hoạt động và bài đánh giá.**
 - Kết quả TMA1 là mốc kiểm tra sớm có liên hệ mạnh nhất với việc hoàn thành môn:
   - tỷ lệ hoàn thành chỉ 8% ở nhóm điểm dưới 40, và 11% ở nhóm chưa nộp;
@@ -495,6 +549,14 @@ khi tích hợp PR #5).
 - Đây là căn cứ để cân nhắc nhắc nhở trước hạn TMA1 và tổ chức hoạt động giữ tương tác ở Tuần 4–6. Đây là **liên hệ,
   không phải nhân quả**: không thể kết luận rằng tăng tương tác hay nộp TMA1 đúng hạn sẽ làm tỷ lệ hoàn thành tăng lên.
 - KG (AQ6) chưa giúp được D2 ở Tuần 6: trước mốc chỉ có một bài đánh giá, nên mọi concept đều có cùng tỷ lệ.
+
+![Hình 13](../reports/figures/aq5_completion_by_first_score.png)
+
+*Hình 13 – Tỷ lệ hoàn thành theo nhóm điểm TMA1. Nguồn: OULAD (Kuzilek et al., 2017), module FFF, train + valid; `reports/figures/aq5_completion_by_first_score.png`.*
+
+![Hình 14](../reports/figures/aq2_clicks_by_week_box.png)
+
+*Hình 14 – Phân bố click mỗi sinh viên theo tuần (thang log(1 + click)); từ Tuần 5, ít nhất một phần tư sinh viên không có click. Nguồn: OULAD (Kuzilek et al., 2017), module FFF, train + valid; `reports/figures/aq2_clicks_by_week_box.png`.*
 
 ### 11.2. Thảo luận
 
@@ -704,6 +766,7 @@ quyết định của cố vấn và kết quả, để đánh giá được KPI
 | M5 | Claude Code: viết nháp mục 4–7 | Văn bản từ `docs/` và `reports/` | _[P1 rà, đối chiếu số liệu]_ | _[P1]_ |
 | M5 | Claude Code: viết nháp mục 8–10 | Văn bản từ `reports/model_metrics.json` và các report khác | _[P3, P4 rà, đối chiếu số liệu]_ | _[P3, P4]_ |
 | M5 | Claude Code: viết nháp mục 11–12 | Thảo luận theo D1–D3, Limitation Log 12 dòng | _[P2, P4 rà; kiểm tra không có claim nhân quả]_ | _[P2, P4]_ |
+| M5 | Claude Code: chèn 14 hình kèm chú thích; nhận xét calibration | Hình từ `reports/figures/`; chú thích được đối chiếu với từng hình | _[P2 rà thứ tự và chú thích hình]_ | _[P2]_ |
 | M5 | Claude Code: viết nháp Abstract, mục 1–3, 13–14 | Văn bản từ `docs/01`, các mục trước và quyết định của nhóm (top 10%, mục tiêu khoảng 55%) | _[P2, P4 rà; mỗi người viết reflection]_ | _[nhóm]_ |
 | M5 | Claude Code: dựng khung Final Report theo P5 | Khung + 4 bảng bắt buộc | _[P2 rà]_ | _[nhóm]_ |
 
@@ -711,7 +774,7 @@ quyết định của cố vấn và kết quả, để đánh giá được KPI
 
 <!-- A. Data dictionary (docs/02_data.md mục 4 + reports/data_dictionary_auto.csv)
      B. Data Quality Report (reports/data_quality_report.md)
-     C. EDA findings đủ 11 hình (reports/eda_findings.md)
+     C. EDA findings đủ 11 hình (reports/eda_findings.md); trong bài đã chèn 14 hình (Hình 1–14) từ reports/figures/
      D. Model Design Card (docs/templates/model_design_card.md)
      E. Risk Register + Governance (docs/04_governance.md)
      F. README + link repo; hướng dẫn tái tạo (make setup → pipeline)
