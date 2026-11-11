@@ -28,13 +28,14 @@ Không có LLM/Agent trong lõi; LLM chỉ là tuỳ chọn read-only để so�
 * **Business Goal:** cải thiện khả năng hoàn thành môn học trong các môn blended thông qua
   nhận diện sớm và hỗ trợ kịp thời.
 * **Primary KPI:** Course Completion Rate = (Pass + Distinction) / đăng ký Tuần 1.
-  Baseline 60% → 68% là **assumption**; cập nhật theo `reports/figures/aq1_*` sau khi chạy dữ liệu thật.
+  **Baseline thật: 46,9%** (FFF, train + valid). **Mục tiêu: khoảng 55%** (+8 điểm %, giữ mức cải thiện của proposal).
+  Mục tiêu là **assumption**, không phải dữ kiện. Proposal ban đầu đặt 60% → 68% trước khi có dữ liệu thật.
   > **BẢN NHÁP – P1 cần rà.** Baseline thật trên OULAD, module FFF, train + valid (2013B, 2013J, 2014B):
   > **46,9%** = (2.119 Pass + 412 Distinction) / 5.397 đăng ký (`reports/aq1_outcomes.csv`).
   > Theo từng lượt: 2013B 48,5%, 2013J 48,0%, 2014B 43,6%. Tập test không dùng trong EDA.
   > Mẫu số là toàn bộ sinh viên đăng ký, kể cả những người rút trước Tuần 1 (5,3% ở 2013B).
   > Mục tiêu 68% trong proposal là giả định viết cho bối cảnh có baseline 60%. Với baseline 46,9%,
-  > nhóm cần chốt lại mục tiêu (ví dụ +8 điểm % → khoảng 55%). Đây vẫn là **assumption**, không phải dữ kiện.
+  > nhóm đã chốt mục tiêu +8 điểm % → khoảng 55% (11/11/2026). Đây vẫn là **assumption**, không phải dữ kiện.
 * **Secondary:** Early Detection Recall ≥ 80%; Timely Support Contact Rate ≥ 80%.
 * **Tiêu chí chấp nhận mô hình** (không phải KPI): Recall ≥ 0.80, F1 ≥ 0.75 trên hold-out
   theo presentation → `config.yaml › acceptance`.

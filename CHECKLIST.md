@@ -43,7 +43,7 @@
 - [ ] **P1** – rà `docs/02_data.md` làm Data Dictionary; ghi số liệu từ `reports/cohort_flow.csv`
   - Có nháp (Claude): bảng cohort FFF trong mục 3. Chờ P1 rà
 - [ ] **P1** – cập nhật baseline Completion Rate thật vào `docs/01_project_overview.md`
-  - Completion rate thật: `46,9 %` (FFF, train + valid). Có nháp, chờ P1 rà; cần chốt lại mục tiêu 68%
+  - Completion rate thật: `46,9 %` (FFF, train + valid). Mục tiêu đã chốt: khoảng 55% (+8 điểm %, assumption)
 - [ ] **P3** – sửa `kg/concept_map.csv` đúng các bài của module đã chọn, chạy lại `pipeline kg eda`
   - Có nháp (Claude, PR #2): FFF TMA1–TMA5. Chờ P3 rà; `concepts.yaml` vẫn thiên về KHXH
 - [ ] **P2** – tạo khung Final Report theo format Milestone P5 (Abstract + mục 1–14 + Traceability Matrix,
@@ -52,6 +52,7 @@
   - Có nháp mục 4–7 (Claude). Chờ P1 rà
   - Có nháp mục 8–10 (Claude). Chờ P3 (mục 8, 10) và P4 (mục 9) rà
   - Có nháp mục 11–12 (Claude). Chờ P2 (mục 11) và P4 (mục 12) rà
+  - Có nháp Abstract, mục 1–3, 13–14 (Claude) → report đã đủ khung nháp. Chờ P2 gom, mỗi người viết reflection mục 13
 - [ ] **P4** – hoàn thiện Risk Register ≥ 6 rủi ro (`docs/04_governance.md`)
   - Có nháp (Claude): thêm R10 (lệch thiết kế giữa các lượt), R11 (precision thấp). Đã có 11 rủi ro. Chờ P4 rà
 
@@ -70,8 +71,8 @@
   - Có nháp (Claude). Chờ P3 rà
 - [ ] **P4** – đọc `reports/fairness_report.md`, chốt ngưỡng chênh lệch Recall, viết nhận định
   - Có nháp (Claude): `docs/04_governance.md` mục "Fairness audit AQ9". Đề xuất ngưỡng > 0.10 với nhóm ≥ 30 sinh viên y=1. P4 chốt
-- [ ] **P4** – chọn ngưỡng cảnh báo (bảng AQ12) và phương án ưu tiên (bảng AQ10)
-  - Ngưỡng chọn: `____ %` · Phương án: `____`
+- [x] **P4** – chọn ngưỡng cảnh báo (bảng AQ12) và phương án ưu tiên (bảng AQ10)
+  - Ngưỡng chọn: `10 %` (top 10%, chọn trên valid) · Phương án: `A – chỉ theo điểm rủi ro` (chọn trên valid)
   - Đã sửa (PR #6): hai bảng giờ tính trên VALID. Phương án do code chọn trên valid: A (chỉ theo điểm rủi ro).
     P4 chọn ngưỡng từ bảng AQ12 (valid) trong `reports/prioritization_report.md`; cả 3 mức đều vượt 70 ca/tuần
 

@@ -30,33 +30,119 @@ QUY TẮC VIẾT (từ P5 + CLAUDE.md):
 
 ## Abstract / Executive Summary
 
-<!-- P2 · viết SAU CÙNG · 150–250 từ · không đưa chi tiết không có trong report.
-Phải có: problem; data; final AQ; analysis đã làm; key result; educational value; limitations.
-Key result nên dùng: Recall test 0.805 (đạt), F1 0.661 (chưa đạt), baseline completion 46.9%. -->
+> **BẢN NHÁP – P2 cần rà và sửa.** Viết sau cùng, khoảng 240 từ.
 
-_[Chưa viết]_
+Trong các môn học blended và từ xa, sinh viên gặp khó khăn thường chỉ được nhận ra sau giữa kỳ, khi việc hỗ trợ đã
+kém hiệu quả. Đồ án xây dựng EduEarlyAlert, một hệ thống cảnh báo sớm giúp cố vấn học tập biết **liên hệ ai trước và
+vì sao** ngay ở cuối Tuần 6, khi năng lực cố vấn có hạn. Dữ liệu là bộ OULAD công khai (Open University, Anh,
+CC-BY 4.0), module FFF với 7.762 lượt đăng ký trong bốn lượt 2013–2014, được chia theo thời gian thành train, valid
+và test. Nhóm trả lời 12 câu hỏi phân tích, từ mô tả, chẩn đoán, dự báo đến đề xuất.
+
+Tỷ lệ hoàn thành thực tế là 46,9%, thấp hơn mức 60% giả định trong proposal. Kết quả nộp bài đánh giá đầu tiên và mức
+tương tác ở Tuần 4–6 là các tín hiệu sớm có liên hệ rõ nhất với việc không hoàn thành môn. Mô hình gradient boosting
+dùng 34 đặc trưng đo đến ngày 41 đạt Recall 0,805 trên lượt test, tức đạt tiêu chí, nhưng F1 chỉ 0,661, chưa đạt tiêu
+chí 0,75. Để đạt Recall này phải cảnh báo hơn một nửa số sinh viên, vượt xa năng lực giả định 70 ca/tuần. Vì vậy hệ
+thống được dùng như danh sách xếp hạng cho cố vấn duyệt, kèm lý do bằng ngôn ngữ hỗ trợ.
+
+Kết quả chỉ thể hiện liên hệ, không phải nhân quả, và chưa được kiểm chứng bằng can thiệp thật. Phần Knowledge Graph
+là dữ liệu mô phỏng. Khả năng khái quát sang bối cảnh Việt Nam cần được kiểm tra thêm.
 
 ## 1. Introduction & Educational Context
 
-<!-- P2 · nguồn M1 · bối cảnh blended learning; motivation; stakeholders; phạm vi; objective.
-Evidence: docs/01_project_overview.md (Problem statement, Stakeholders). Không kể lại transcript stakeholder. -->
+> **BẢN NHÁP – P2 cần rà và sửa.** Nguồn: `docs/01_project_overview.md` (tóm tắt Project Charter V1 và M1).
+> GAP: bối cảnh và nhu cầu stakeholder chi tiết của M1 không có trong repo; nhóm bổ sung từ báo cáo M1.
 
-_[Chưa viết]_
+**Bối cảnh.**
+- Trong các môn blended learning, phần lớn hoạt động học diễn ra trên hệ thống quản lý học tập (LMS).
+- Khi sinh viên giảm tương tác hoặc bỏ lỡ bài đánh giá đầu kỳ, giảng viên và cố vấn thường chỉ nhận ra sau giữa kỳ.
+  Lúc đó nhiều sinh viên đã rút môn hoặc khó theo kịp.
+- Cố vấn học tập lại có năng lực giới hạn. Họ không thể liên hệ mọi sinh viên mỗi tuần, nên cần biết **liên hệ ai
+  trước** và **nên hỏi về điều gì**.
+
+**Vì sao vấn đề đáng phân tích.** Dữ liệu LMS ghi lại hành vi học theo từng ngày, nên về nguyên tắc có thể nhận ra tín
+hiệu sớm trước khi kết quả cuối kỳ xảy ra. Nhưng một hệ thống cảnh báo chỉ có ích khi:
+1. chỉ dùng thông tin có sẵn tại thời điểm cảnh báo;
+2. giải thích được lý do;
+3. không gán nhãn tiêu cực cho sinh viên;
+4. luôn để con người quyết định.
+
+**Stakeholders và cách dùng kết quả.**
+
+| Stakeholder | Quyết định được hỗ trợ | Loại quyết định |
+|---|---|---|
+| Advisor (cố vấn học tập) | D1 – Tuần này liên hệ ai trước, hỏi thăm về điều gì | Đảo ngược được, lặp lại hằng tuần |
+| Lecturer (giảng viên) | D2 – Điều chỉnh hoạt động học, nhắc nhở trước hạn bài đánh giá | Đảo ngược được |
+| Program Manager | D3 – Phân bổ năng lực cố vấn, có mở rộng hệ thống hay không | Khó đảo ngược |
+| Sinh viên (gián tiếp) | Được hỗ trợ sớm, không bị gán nhãn | – |
+
+**Phạm vi.**
+- Nằm trong phạm vi: phân tích Mức 3 (dự báo và giải thích) cộng Mức 4 nhẹ (Knowledge Graph nhỏ, dữ liệu mô phỏng).
+- Ngoài phạm vi: triển khai thật, tự động nhắn tin cho sinh viên, dùng dữ liệu cá nhân thật, chứng minh nhân quả,
+  so sánh giảng viên.
+
+**Mục tiêu đồ án.** Xây dựng và đánh giá trên dữ liệu mở một quy trình cảnh báo sớm tại cuối Tuần 6. Quy trình
+xếp hạng sinh viên cần hỗ trợ trong giới hạn năng lực cố vấn, kèm lý do minh bạch và cơ chế để con người phê duyệt.
 
 ## 2. Business Understanding & Success Criteria
 
-<!-- P2 · nguồn M1 · Business Goal; SMART; Primary/Secondary KPI; decision needs (D1–D3).
-Evidence: docs/01_project_overview.md. CẦN CHỐT: baseline thật 46.9% thay cho giả định 60% → mục tiêu 68% phải sửa
-(vẫn ghi là assumption). Phân biệt KPI tổ chức với tiêu chí chấp nhận mô hình (Recall ≥ 0.80, F1 ≥ 0.75). -->
+> **BẢN NHÁP – P2 cần rà và sửa.**
 
-_[Chưa viết]_
+**Business Goal.** Cải thiện khả năng hoàn thành môn học trong các môn blended, thông qua nhận diện sớm và hỗ trợ kịp
+thời. Đây là kết quả mà tổ chức mong muốn, không phải một nhiệm vụ kỹ thuật.
+
+**Bảng 2.1 – KPI và tiêu chí thành công (phiên bản cuối).**
+
+| Loại | Chỉ số | Định nghĩa | Giá trị | Trạng thái |
+|---|---|---|---|---|
+| Primary KPI | Course Completion Rate | (Pass + Distinction) / số đăng ký | Baseline **46,9%** (FFF, train + valid) → mục tiêu **khoảng 55%** | Baseline từ dữ liệu; mục tiêu là **assumption** |
+| Secondary KPI | Early Detection Recall | % sinh viên không hoàn thành được cảnh báo tại Tuần 6 | ≥ 80% | Đo được trên dữ liệu lịch sử: 80,5% |
+| Secondary KPI | Timely Support Contact Rate | % sinh viên được cảnh báo được liên hệ kịp thời | ≥ 80% | Không đo được trên OULAD (không có dữ liệu liên hệ) |
+| Tiêu chí chấp nhận mô hình (không phải KPI) | Recall, F1 trên lượt test | – | Recall ≥ 0,80; F1 ≥ 0,75 | Recall đạt; F1 chưa đạt |
+| Ràng buộc nguồn lực | Năng lực cố vấn K | Số ca/tuần | 35 × 2 = 70 | **Assumption** |
+
+**SMART Goal (bản cuối, đề xuất).** Trong một lượt giảng dạy, tăng Course Completion Rate của module mục tiêu từ 46,9%
+lên khoảng 55%. Cách làm: mỗi tuần, từ cuối Tuần 6, cung cấp cho cố vấn danh sách 70 sinh viên ưu tiên kèm lý do, và
+có bước phê duyệt của con người.
+
+> **GAP – nhóm đối chiếu với M1:** phiên bản SMART ở M1 (60% → 68%) đã được cập nhật theo baseline thật. Ghi thay đổi
+> này vào AQ Revision Log nếu M1 dùng câu chữ khác.
+
+**Nhu cầu quyết định.**
+- D1 cần danh sách xếp hạng kèm lý do, cập nhật hằng tuần.
+- D2 cần mẫu hình theo tuần và theo bài đánh giá ở mức lớp.
+- D3 cần biết quy mô vấn đề, khối lượng công việc theo từng ngưỡng cảnh báo, và hệ thống có công bằng giữa các nhóm
+  sinh viên hay không.
 
 ## 3. Analytical Questions & Analytics Levels
 
-<!-- P2 + P3 · nguồn M1 + M3 · danh sách AQ cuối + level + decision. Dùng bảng Traceability (cuối report)
-và AQ Revision Log; ở đây chỉ trình bày ladder và AQ quality check (Clear, Specific, Scoped, Data-oriented, Answerable). -->
+> **BẢN NHÁP – P2 + P3 cần rà và sửa.** Trạng thái cuối và lý do thay đổi ở Traceability Matrix và AQ Revision Log.
 
-_[Chưa viết]_
+Hệ thống câu hỏi được xây theo bậc, từ mô tả đến đề xuất. Mỗi bậc dựa trên bậc trước và gắn với một quyết định.
+Đường lõi là **AQ1 → AQ4 → AQ7 → AQ10**: hiện trạng, chỉ báo khác biệt, dự báo, ưu tiên.
+
+**Bảng 3.1 – Final Analytical Questions.**
+
+| AQ | Level | Câu hỏi cuối | Quyết định | Trạng thái |
+|---|---|---|---|---|
+| AQ1 ★ | Descriptive | Tỷ lệ hoàn thành, trượt và rút môn theo lượt là bao nhiêu, và rút môn diễn ra vào tuần nào? | D3 | Answered |
+| AQ2 | Descriptive | Tương tác VLE thay đổi thế nào theo tuần và loại tài nguyên? | D2 | Answered |
+| AQ3 | Descriptive | Tỷ lệ nộp đúng hạn, muộn, chưa nộp và điểm của bài đánh giá trước Tuần 6 ra sao? | D1, D2 | Answered (chỉ TMA1) |
+| AQ4 ★ | Diagnostic | Chỉ báo tương tác Tuần 1–6 khác biệt bao nhiêu giữa nhóm hoàn thành và không hoàn thành? | D1 | Answered |
+| AQ5 | Diagnostic | Điểm và việc nộp bài đầu kỳ liên hệ thế nào với hoàn thành môn, khi đã điều chỉnh theo tương tác? | D1, D2 | Answered |
+| AQ6 | Diagnostic | Concept/CLO nào nhiều sinh viên cần hỗ trợ thêm? | D2 | Partial (KG mô phỏng) |
+| AQ7 ★ | Predictive | Ở cuối Tuần 6, xác suất một sinh viên còn theo học không hoàn thành môn là bao nhiêu? | D1 | Answered |
+| AQ8 | Predictive | Sinh viên nào có khả năng rút môn trong Tuần 7–12? | D1 | Deferred |
+| AQ9 | Predictive (audit) | Hiệu năng cảnh báo có nhất quán giữa các nhóm sinh viên không? | D3 | Partial |
+| AQ10 ★ | Prescriptive | Với năng lực K ca/tuần, nên liên hệ ai trước? | D1 | Answered |
+| AQ11 | Prescriptive | Loại hỗ trợ nào phù hợp với từng sinh viên được đề xuất? | D1 | Partial |
+| AQ12 | Prescriptive | Cảnh báo bao nhiêu % sinh viên là hợp lý, xét đánh đổi giữa phát hiện và khối lượng công việc? | D3 | Answered (top 10%) |
+
+**Kiểm tra chất lượng AQ.**
+- *Clear và Specific*: mỗi câu nêu rõ đối tượng (sinh viên × lượt), mốc thời gian (ngày 41) và đại lượng cần đo.
+- *Scoped*: chỉ module FFF, 4 lượt.
+- *Data-oriented*: mỗi câu gắn với bảng OULAD cụ thể (Bảng 5.3).
+- *Answerable*: AQ6 chỉ trả lời được một phần (thiếu dữ liệu concept thật), AQ8 hoãn vì thời gian. Các câu còn lại trả
+  lời được ở mức evidence nêu tại mục 11.
 
 ## 4. Data Requirements & Dataset Selection
 
@@ -365,7 +451,9 @@ thấp hơn một chút (0,103), nên nhóm chọn phương án đơn giản nh�
 - Cảnh báo top 10% tương đương 128 ca, cần 1,8 tuần năng lực, Recall 0,18 và precision 0,90.
 - Top 30% tương đương 385 ca, cần 5,5 tuần năng lực, Recall 0,50.
 
-Ngưỡng cuối cùng do P4 chọn: _[điền sau khi chọn]_. Mọi đánh giá ưu tiên chỉ dựa trên dữ liệu lịch sử, **không**
+Nhóm (P4) chốt **ngưỡng top 10%** dựa trên bảng valid, vì đây là mức gần năng lực nhất: mỗi tuần liên hệ 70 ca
+đầu danh sách, phần còn lại chuyển sang tuần sau hoặc tầng "Theo dõi". Báo cáo trên test (chỉ để tham khảo, không dùng
+để chọn): top 10% = 183 ca, Recall 0,237, precision 0,929. Mọi đánh giá ưu tiên chỉ dựa trên dữ liệu lịch sử, **không**
 chứng minh rằng liên hệ sẽ giúp sinh viên hoàn thành môn.
 
 **Khả năng tái lập.** Cùng dữ liệu, cùng `config.yaml` và cùng seed thì cho cùng kết quả. Mỗi bước ghi vào
@@ -484,24 +572,71 @@ khi tích hợp PR #5).
 
 ## 13. Generative AI Use & Reflection
 
-<!-- P4 (cả nhóm khai) · AI dùng vào việc gì; gợi ý gì; kiểm chứng ra sao; chấp nhận/bác bỏ; quyết định cuối của người.
-Dùng bảng "AI Decision Log" bên dưới. AI không thay evidence. -->
+> **BẢN NHÁP – P4 cần rà; MỖI THÀNH VIÊN tự viết phần reflection của mình.** Đoạn dưới mô tả việc dùng Claude Code
+> trong M5 (có thật, ghi trong lịch sử commit và PR #2–#10). Việc dùng AI ở M1–M4 nhóm phải tự khai.
 
-_[Chưa viết]_
+**AI được dùng vào việc gì.** Ở M5, nhóm dùng Claude Code (Anthropic) làm trợ lý lập trình và viết nháp:
+- tải OULAD và chạy pipeline;
+- sửa code (`notes.py`, `prioritize.py`) kèm test;
+- soạn nháp các tài liệu và các mục của report này.
+
+Mọi thay đổi đi qua pull request để thành viên duyệt trước khi merge. Mọi bản nháp đều gắn nhãn "BẢN NHÁP".
+
+**Gợi ý của AI và quyết định của nhóm.**
+
+| Gợi ý của AI | Nhóm kiểm chứng | Quyết định cuối |
+|---|---|---|
+| Đổi module từ BBB sang FFF vì BBB 2014J có TMA đầu kỳ trọng số 0 | Đối chiếu `assessments.csv` | Chấp nhận (PR #2) |
+| Bảng AQ10/AQ12 đang tính trên tập test, vi phạm quy tắc không chọn bằng test | Đọc `prioritize.py`; duyệt PR #6 | Chấp nhận, sửa code |
+| Chọn ngưỡng top 10% | So với bảng valid và năng lực 70 ca/tuần | P4 chốt top 10% |
+| Mục tiêu KPI khoảng 55% (+8 điểm %) | So với baseline thật 46,9% | Nhóm chốt, ghi là assumption |
+| _[nhóm bổ sung các gợi ý bị bác bỏ hoặc sửa]_ | | |
+
+**Những gì AI không làm thay.**
+- AI không tạo số liệu: mọi con số trong report lấy từ `reports/` do pipeline sinh ra trên dữ liệu thật.
+- Các phần cần dữ liệu M1/M2 mà repo không có (Dataset Selection Matrix, search log, câu chữ AQ gốc) được ghi **GAP**
+  thay vì để AI tự điền.
+- Insight EDA, nhận định fairness và lựa chọn ngưỡng là bản nháp hoặc gợi ý, do thành viên phụ trách duyệt và chịu
+  trách nhiệm.
+
+**Reflection.** _[Mỗi thành viên viết 2–3 câu: AI hỗ trợ hay thay thế lập luận? Lần nào phải sửa đầu ra của AI?
+Điều gì nhóm tự quyết định?]_
 
 ## 14. Conclusion
 
-<!-- P2 · đã hỏi gì; dữ liệu hỗ trợ đến đâu; phân tích nào phù hợp; kết luận được/không được; bước tiếp theo.
-Không thêm kết luận mới. -->
+> **BẢN NHÁP – P2 cần rà và sửa.** Không thêm kết luận mới so với các mục trước.
 
-_[Chưa viết]_
+**Đồ án hỏi gì.** Ở cuối Tuần 6, cố vấn có thể biết liên hệ sinh viên nào trước, vì sao, khi năng lực có hạn không?
+
+**Dữ liệu hỗ trợ đến đâu.** OULAD (module FFF, 4 lượt 2013–2014) đủ để mô tả hiện trạng, phân tích liên hệ và đánh giá
+mô hình dự báo theo thời gian. Dữ liệu không có thông tin concept thật (nên KG là mô phỏng) và không có dữ liệu về
+việc liên hệ hay hỗ trợ (nên chưa đánh giá được hiệu quả can thiệp).
+
+**Phân tích phù hợp.** Mô tả và kiểm định phi tham số cho AQ1–AQ5; mô hình gradient boosting chọn trên tập valid cho
+AQ7; xếp hạng Top-K và phân tích kịch bản cho AQ10–AQ12. Tất cả được kiểm soát leakage, audit fairness và có bước phê
+duyệt của con người.
+
+**Kết luận được:**
+- Tỷ lệ hoàn thành thực tế là 46,9%.
+- Kết quả TMA1 và mức tương tác ở Tuần 4–6 có liên hệ rõ với việc không hoàn thành môn.
+- Mô hình đạt Recall 0,805 trên lượt giữ lại (đạt tiêu chí), F1 0,661 (chưa đạt).
+- Năng lực cố vấn là giới hạn chính khi dùng thực tế: nhóm chốt ngưỡng top 10%, liên hệ 70 ca/tuần theo thứ tự ưu tiên.
+
+**Không kết luận được:**
+- Không kết luận được rằng liên hệ sớm làm tăng tỷ lệ hoàn thành.
+- Không kết luận được rằng kết quả áp dụng cho bối cảnh Việt Nam.
+- Không kết luận được gì về concept cụ thể sinh viên cần hỗ trợ.
+- Chưa đủ dữ liệu để kết luận về công bằng ở các nhóm nhỏ.
+
+**Bước tiếp theo.** Thêm mốc dự báo sau TMA2. Làm AQ8. Thêm khoảng tin cậy cho audit fairness. Chạy thử có ghi lại
+quyết định của cố vấn và kết quả, để đánh giá được KPI Completion Rate và Timely Support Contact Rate (mục 12).
 
 ---
 
 ## Final Project Traceability Matrix (bắt buộc)
 
 > **BẢN NHÁP – cả nhóm rà.** Một hàng = một AQ cuối. Ô thiếu evidence ghi GAP.
-> KPI: Completion Rate (baseline thật 46,9%, `reports/aq1_outcomes.csv`; mục tiêu là assumption).
+> KPI: Completion Rate, baseline thật 46,9% (`reports/aq1_outcomes.csv`), mục tiêu khoảng 55% (+8 điểm %, assumption).
 > Goal chung: cải thiện hoàn thành môn nhờ nhận diện sớm và hỗ trợ kịp thời (`docs/01_project_overview.md`).
 
 | AQ-ID | Goal / KPI | Final Analytical Question | Level | Required Data / Unit | Actual Dataset & Variables | Preparation / Feature Logic | Method + Rationale | Evaluation / Result | Decision Supported | Final Status |
@@ -517,7 +652,7 @@ _[Chưa viết]_
 | AQ9 | Trách nhiệm/công bằng | Hiệu năng có nhất quán giữa các nhóm? | Predictive (audit) | Thuộc tính nhạy cảm (chỉ audit) | `gender, region, disability, age_band, imd_band, highest_education` | Không vào mô hình (Fairness Gate) | Recall/FNR theo nhóm | Chênh lệch đáng chú ý: gender 0,08 (F 0,74 / M 0,82); các chênh lệch lớn hơn đến từ nhóm nhỏ | G3 – duyệt fairness | Partial – thiếu khoảng tin cậy |
 | AQ10 | Timely Support Contact ≥ 80% | Ai liên hệ trước khi năng lực có hạn (K)? | Prescriptive | Risk score + năng lực | Dự đoán AQ7, K = 70 (assumption) | Top-K, phân tầng | So sánh 3 phương án theo Coverage@K; chọn trên valid | Valid: chọn A (A = C: Coverage@K 0,107, Precision@K 0,957; B 0,103). Test: cả 3 như nhau (0,093) | D1 | Answered (trên dữ liệu lịch sử) |
 | AQ11 | Support quality | Loại hỗ trợ nào cho từng SV? | Prescriptive | Reason codes + concept gap | Reason codes, KG mô phỏng | Luật gán loại hỗ trợ | Luật (có người duyệt) | Phân bố đề xuất trong Risk List; chưa đánh giá hiệu quả | D1 (cố vấn duyệt) | Partial – chưa kiểm chứng |
-| AQ12 | Timely Support Contact | Ngưỡng cảnh báo 10/20/30% – đánh đổi? | Prescriptive | Risk score + năng lực | Dự đoán AQ7 | Kịch bản ngưỡng | Recall/precision/tải công việc; bảng chọn trên valid | Valid: 10% = 128 ca (1,8 tuần năng lực), Recall 0,18, Precision 0,90; cả 3 ngưỡng vượt 70 ca/tuần | D3 | Partial – P4 chưa chọn ngưỡng |
+| AQ12 | Timely Support Contact | Ngưỡng cảnh báo 10/20/30% – đánh đổi? | Prescriptive | Risk score + năng lực | Dự đoán AQ7 | Kịch bản ngưỡng | Recall/precision/tải công việc; bảng chọn trên valid | Chốt **top 10%** trên valid: 128 ca (1,8 tuần năng lực), Recall 0,18, Precision 0,90. Test (báo cáo): Recall 0,24, Precision 0,93 | D3 | Answered (trên dữ liệu lịch sử; K là giả định) |
 
 ## AQ Revision Log
 
@@ -551,7 +686,7 @@ _[Chưa viết]_
 | AQ9 | `reports/fairness_report.md` | Recall theo nhóm | Gender chênh 0,08 | Nhóm nhỏ dao động lớn | Ghi vào Limitations; theo dõi tầng gần ngưỡng |
 | AQ10 | `reports/prioritization_report.md` | Coverage@K, chọn trên valid | Chọn A (chỉ theo điểm rủi ro); ở K = 70 các phương án gần như như nhau | Đánh giá trên dữ liệu lịch sử; K là giả định | Dùng phương án đơn giản nhất (A) |
 | AQ11 | `reports/risk_list.csv` | Luật | Phân bố loại hỗ trợ | Chưa đánh giá hiệu quả | Là gợi ý, cố vấn quyết định |
-| AQ12 | `reports/aq12_threshold_scenarios.csv` (valid) | Kịch bản | Mọi ngưỡng vượt năng lực (10% = 128 ca trên valid) | K là giả định; P4 chưa chọn | Cần thêm năng lực hoặc chỉ liên hệ Top-K |
+| AQ12 | `reports/aq12_threshold_scenarios.csv` (valid) | Kịch bản | Chốt top 10%: gần năng lực nhất nhưng vẫn vượt (128 ca so với 70 ca/tuần) | K là giả định; chỉ đánh giá trên dữ liệu lịch sử | Liên hệ 70 ca/tuần theo thứ tự ưu tiên; phần còn lại vào tầng "Theo dõi" |
 
 ## AI Decision Log
 
@@ -569,6 +704,7 @@ _[Chưa viết]_
 | M5 | Claude Code: viết nháp mục 4–7 | Văn bản từ `docs/` và `reports/` | _[P1 rà, đối chiếu số liệu]_ | _[P1]_ |
 | M5 | Claude Code: viết nháp mục 8–10 | Văn bản từ `reports/model_metrics.json` và các report khác | _[P3, P4 rà, đối chiếu số liệu]_ | _[P3, P4]_ |
 | M5 | Claude Code: viết nháp mục 11–12 | Thảo luận theo D1–D3, Limitation Log 12 dòng | _[P2, P4 rà; kiểm tra không có claim nhân quả]_ | _[P2, P4]_ |
+| M5 | Claude Code: viết nháp Abstract, mục 1–3, 13–14 | Văn bản từ `docs/01`, các mục trước và quyết định của nhóm (top 10%, mục tiêu khoảng 55%) | _[P2, P4 rà; mỗi người viết reflection]_ | _[nhóm]_ |
 | M5 | Claude Code: dựng khung Final Report theo P5 | Khung + 4 bảng bắt buộc | _[P2 rà]_ | _[nhóm]_ |
 
 ## Phụ lục
