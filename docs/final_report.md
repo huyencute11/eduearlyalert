@@ -236,28 +236,141 @@ vì dung lượng và theo nguyên tắc governance. Cách tái tạo:
 
 ## 8. Modeling / Analysis Strategy
 
-<!-- P3 · M4 Level 1 · AQ → loại phân tích → task → baseline → candidate methods → phương án chính → rationale.
-Evidence: docs/templates/model_design_card.md, docs/01 (AQ ladder ↔ code). Cần Model/Method Selection Matrix
-cho MỌI AQ (không chỉ AQ7): ví dụ AQ4 = Cliff's δ + Holm; AQ5 = logistic giải thích; AQ7 = rule vs logistic vs gboost. -->
+> **BẢN NHÁP – P3 cần rà và sửa.** Claude viết ngày 11/11/2026 từ `docs/03_pipeline.md`, `src/eduearlyalert/` và
+> `docs/templates/model_design_card.md`.
 
-_[Chưa viết]_
+Mỗi AQ được gắn với một loại phân tích và một phương pháp phù hợp với dữ liệu, với mức diễn giải cần có và với người
+dùng kết quả (Bảng 8.1). Nhóm chọn theo ba nguyên tắc:
+1. **Bắt đầu từ baseline đơn giản** mà người dùng có thể tự áp dụng.
+2. **Ưu tiên phương pháp diễn giải được** cho các AQ diagnostic.
+3. **Chỉ dùng mô hình phức tạp hơn khi nó tốt hơn baseline trên tập valid.**
+
+**Bảng 8.1 – Model/Method Selection Matrix.**
+
+| AQ | Loại | Technical task | Baseline | Phương pháp ứng viên | Phương án chính và lý do |
+|---|---|---|---|---|---|
+| AQ1–AQ3 | Descriptive | Tổng hợp theo lượt/tuần/bài | – | Bảng tỷ lệ, đường tích luỹ, heatmap, histogram | Mô tả trực tiếp. Chỉ dùng train + valid để không nhìn trước tập test |
+| AQ4 | Diagnostic | So sánh hai nhóm | So sánh trung bình | t-test; Mann-Whitney + Cliff's δ | **Mann-Whitney + Cliff's δ, hiệu chỉnh Holm.** Click lệch phải mạnh, không giả định phân phối chuẩn được. Với n lớn, p-value gần như luôn nhỏ, nên đọc effect size |
+| AQ5 | Diagnostic | Liên hệ có điều chỉnh | Tỷ lệ hoàn thành theo nhóm điểm | Hồi quy logistic giải thích | **Logistic giải thích, OR trên mỗi SD.** Đọc được chiều và độ lớn của liên hệ sau khi điều chỉnh theo tương tác. Không diễn giải nhân quả |
+| AQ6 | Diagnostic | Truy vấn đồ thị | – | Truy vấn KG | **Truy vấn KG (NetworkX)** trên ánh xạ mô phỏng. Chỉ minh hoạ cơ chế giải thích |
+| AQ7 | Predictive | Phân loại nhị phân tại ngày 41 | **Luật**: chưa nộp bài đầu tiên hoặc 0 click Tuần 5–6 | Logistic (điền trung vị, chuẩn hoá, cân bằng lớp); Gradient boosting (HistGradientBoosting, cân bằng lớp) | **Chọn theo PR-AUC trên valid.** Logistic dễ giải thích; boosting xử lý được quan hệ phi tuyến và giá trị thiếu. Kết quả: gboost (PR-AUC valid 0,777) gần như ngang logistic (0,776) |
+| AQ9 | Predictive (audit) | Đánh giá theo nhóm | Recall chung | Recall/FNR/precision theo nhóm | **Recall theo nhóm**, ẩn nhóm < 10. Bỏ sót sinh viên cần hỗ trợ là lỗi có hại nhất |
+| AQ10 | Prescriptive | Xếp hạng trong giới hạn năng lực | Chọn ngẫu nhiên | A: chỉ điểm rủi ro; B: rủi ro + giảm tương tác; C: rủi ro + chưa nộp bài | **Coverage@K trên valid**, K = 70 (giả định). Hoà thì chọn phương án đơn giản hơn |
+| AQ11 | Prescriptive | Gợi ý loại hỗ trợ | – | Luật dựa trên reason codes + KG | **Luật minh bạch**, cố vấn quyết định cuối cùng |
+| AQ12 | Prescriptive | Phân tích kịch bản | – | Cảnh báo top 10/20/30% | **Bảng đánh đổi** Recall, precision và số ca so với năng lực. Nhóm chọn ngưỡng trên valid |
+
+**Vì sao không dùng mô hình phức tạp hơn.** Dữ liệu chỉ có 3.383 dòng train và 34 feature dạng bảng. Mục tiêu là cố
+vấn hiểu được vì sao một sinh viên được đề xuất. Vì vậy nhóm dừng ở logistic và gradient boosting, giải thích bằng
+permutation importance và reason codes. SHAP, deep learning và clustering được cắt vì thời gian (AQ Revision Log).
+
+**Không dùng LLM trong lõi.** Proposal có tuỳ chọn dùng LLM để soạn câu giải thích. Nhóm không làm, vì reason codes
+dạng luật đã đủ minh bạch, và LLM có thể tạo nội dung không có trong dữ liệu (rủi ro "thêm claim không có thật" mà P5
+nêu).
 
 ## 9. Evaluation Design
 
-<!-- P4 · M4 Level 1 · metric; baseline; split theo presentation; tiêu chí; leakage/fairness/interpretability checks.
-Evidence: config.yaml (acceptance, scope), docs/04_governance.md (human gates, fairness), reports/model_metrics.json.
-Viết rõ: ngưỡng chọn trên valid; test chạm 1 lần. AQ10/AQ12 cũng chọn trên valid (PR #6), test chỉ báo cáo. -->
+> **BẢN NHÁP – P4 cần rà và sửa.** Nguồn: `config.yaml`, `docs/03_pipeline.md`, `docs/04_governance.md`.
 
-_[Chưa viết]_
+**Chia dữ liệu theo thời gian.** Train trên hai lượt 2013 (2013B, 2013J), valid trên 2014B, test trên 2014J. Cách
+chia này mô phỏng việc dùng dữ liệu các lượt trước để dự báo một lượt mới, và tránh việc cùng một lượt xuất hiện ở cả
+train và test. Có ba quy tắc:
+- **Valid** dùng để chọn mô hình, chọn ngưỡng, chọn phương án ưu tiên và cung cấp bảng để chọn ngưỡng cảnh báo.
+- **Test** chỉ được dùng một lần, để báo cáo.
+- EDA chỉ chạy trên train + valid.
+
+**Bảng 9.1 – Evaluation Plan theo thành phần.**
+
+| Thành phần | Metric | Baseline / so sánh | Tiêu chí thành công | Kiểm tra bổ sung |
+|---|---|---|---|---|
+| EDA (AQ1–AQ6) | Effect size (Cliff's δ), OR, tỷ lệ | – | Mỗi hình có Observation–Insight–Evidence–Limitation; ≥ 8 hình | Ngôn ngữ "liên hệ", không nhân quả; ẩn nhóm < 10 |
+| Mô hình (AQ7) | **Recall** (chính), F1, PR-AUC, ROC-AUC, Brier | Luật (baseline 0) | **Recall ≥ 0,80 và F1 ≥ 0,75 trên test** (tiêu chí chấp nhận, không phải KPI) | Leakage check tự động; FN analysis; calibration |
+| Giải thích | Permutation importance theo PR-AUC (trên valid) | – | Mỗi cảnh báo có ≥ 1 lý do bằng ngôn ngữ hỗ trợ | `check_language` chặn từ cấm |
+| Fairness (AQ9) | Recall và FNR theo nhóm | Recall chung | Đề xuất: chênh lệch ≤ 0,10 giữa các nhóm có ≥ 30 sinh viên y = 1 (P4 chốt) | Ẩn nhóm < 10; không đưa thuộc tính nhạy cảm vào mô hình |
+| Ưu tiên (AQ10, AQ12) | Coverage@K, Precision@K; Recall/precision theo % cảnh báo | Chọn ngẫu nhiên; phương án A | Chọn trên valid | K là giả định |
+| KG (AQ6) | Competency questions trả lời được | – | Mỗi bài trước mốc có ánh xạ concept | Nhãn "MÔ PHỎNG" trên mọi output |
+| Toàn hệ thống | Human gates G1–G4 | – | Mọi Risk List ở `pending_review`; quyết định ghi vào `audit_log.jsonl` | Không có chức năng tự liên hệ sinh viên |
+
+**Vì sao chọn các metric này.**
+- Lỗi tốn kém nhất là **bỏ sót** sinh viên cần hỗ trợ (false negative). Vì vậy Recall là metric chính.
+- PR-AUC dùng để chọn mô hình vì nó không phụ thuộc ngưỡng và tập trung vào lớp dương.
+- F1 giữ cho số cảnh báo sai không quá lớn, để cố vấn không mất thời gian vào ca không cần.
+- Accuracy không được dùng.
+
+**Ngưỡng của mô hình.** Ngưỡng được chọn trên valid: F1 cao nhất trong các ngưỡng đạt Recall ≥ 0,80.
+Ngưỡng **không** được chỉnh lại sau khi xem test.
 
 ## 10. Experimental Implementation & Results
 
-<!-- P3 · M4 Level 2 · tools; setup; kết quả; so sánh baseline; error analysis; diễn giải.
-Evidence: reports/model_results.md, reports/figures/aq7_*, docs/templates/model_design_card.md (error analysis),
-reports/explainability_report.md, reports/fairness_report.md, reports/prioritization_report.md.
-Không chỉ báo "best model": giải thích metric và ý nghĩa với AQ7. -->
+> **BẢN NHÁP – P3 cần rà và sửa.** Mọi số liệu từ `reports/model_metrics.json`, `reports/model_results.md`,
+> `reports/explainability_report.md`, `reports/fairness_report.md`, `reports/prioritization_report.md`
+> (OULAD thật, FFF, lần chạy ngày 11/11/2026).
 
-_[Chưa viết]_
+**Triển khai.**
+- Python 3; pandas và DuckDB (cho `studentVle` 10,6 triệu dòng); scikit-learn; NetworkX (KG); Streamlit (dashboard).
+- Pipeline 9 bước, mỗi bước có `run(cfg)`. Mọi tham số nằm ở `config.yaml`, seed = 42.
+- 44 test tự động, chạy trên dữ liệu giả cùng schema. Có CI (`.github/workflows/ci.yml`).
+- Mã nguồn: _[link repo]_.
+
+**Kết quả AQ7.** Quần thể dự báo: train 3.383, valid 1.283 (629 y = 1), test 1.834 (717 y = 1).
+
+**Bảng 10.1 – So sánh mô hình** (ngưỡng chọn trên valid).
+
+| Tập | Mô hình | Ngưỡng | Recall | Precision | F1 | PR-AUC | ROC-AUC | Brier | % được cảnh báo |
+|---|---|---:|---:|---:|---:|---:|---:|---:|---:|
+| Valid | Luật | – | 0,278 | 0,841 | 0,418 | 0,588 | 0,614 | – | 16% |
+| Valid | Logistic | 0,367 | 0,832 | 0,643 | 0,725 | 0,776 | 0,775 | 0,193 | 63% |
+| Valid | **Gboost** | 0,405 | 0,801 | 0,655 | 0,721 | **0,777** | 0,774 | 0,193 | 60% |
+| Test | Luật | – | 0,292 | 0,860 | 0,435 | 0,528 | 0,631 | – | 13% |
+| Test | Logistic | 0,367 | 0,856 | 0,549 | 0,669 | 0,740 | 0,801 | 0,181 | 61% |
+| Test | **Gboost** | 0,405 | **0,805** | 0,560 | **0,661** | 0,745 | 0,794 | 0,185 | 56% |
+
+**Diễn giải kết quả:**
+1. Hai mô hình học máy tốt hơn rõ rệt so với luật: PR-AUC trên test 0,745 so với 0,528. Luật có precision cao
+   nhưng chỉ phát hiện 29% số sinh viên cần hỗ trợ.
+2. Mô hình chính (gboost) **đạt tiêu chí Recall** (0,805 ≥ 0,80) nhưng **chưa đạt tiêu chí F1** (0,661 < 0,75).
+3. Logistic và gboost gần như ngang nhau. Trên test, logistic có F1 nhỉnh hơn một chút (0,669), nhưng nhóm **không
+   đổi** mô hình chính, vì lựa chọn đã được chốt trên valid.
+4. Precision trên test thấp hơn valid (0,56 so với 0,65), một phần vì tỷ lệ y = 1 trong quần thể dự báo của test
+   thấp hơn (39% so với 49%; mục 6).
+5. Hình `aq7_roc_pr.png`, `aq7_confusion_matrix.png` và `aq7_calibration.png` ở Phụ lục.
+
+**Một mâu thuẫn quan trọng cho triển khai.** Để đạt Recall 0,80, mô hình phải cảnh báo **56% sinh viên** của lượt test,
+tức 1.030 người. Năng lực giả định là 70 ca/tuần. Vì vậy, ở dạng "cảnh báo khi vượt ngưỡng", hệ thống không dùng được.
+Cách dùng thực tế là **xếp hạng rồi liên hệ Top-K** (AQ10). Trên valid, Top-70 đạt Precision@K 0,957 nhưng chỉ bao phủ
+10,7% số sinh viên cần hỗ trợ. Tiêu chí Recall ≥ 0,80 đo khả năng phân biệt của mô hình, không phải độ bao phủ thực tế
+khi năng lực có hạn. Cả hai con số cần được trình bày cạnh nhau.
+
+**Error analysis.** Có 140 false negative trên test: 75 Withdrawn và 65 Fail.
+- So với nhóm được phát hiện đúng, nhóm bị bỏ sót có tổng click trung vị cao gấp khoảng 3,7 lần (757 so với 206).
+- Số ngày hoạt động gấp đôi (29,5 so với 13), gần như không giảm tương tác, và điểm TMA1 trung vị 82 so với 73.
+- Nói cách khác, ở Tuần 1–6 họ trông giống nhóm hoàn thành. Đây là giới hạn của mốc dự báo: hơn một nửa số người rút
+  môn rút sau Tuần 6 (AQ1), và khó khăn của nhóm Fail có thể chỉ xuất hiện ở các bài sau.
+- Chi tiết ở Model Design Card (Phụ lục D).
+
+**Giải thích (explainability).**
+- Theo permutation importance trên valid, `mean_score` (điểm TMA1) quan trọng nhất: PR-AUC giảm 0,105 khi xáo trộn
+  feature này. Tiếp theo là `clicks_w6` (0,023) và `mean_days_early` (0,011).
+- Ở mức cá nhân, mỗi cảnh báo kèm reason codes dạng luật, ngưỡng lấy từ phân vị trên train. Ví dụ: "Chưa nộp bài đánh
+  giá đầu tiên – nên hỏi thăm khó khăn".
+- Reason code cho biết **dấu hiệu trong dữ liệu**, không phải nguyên nhân sinh viên gặp khó khăn.
+
+**Fairness (AQ9).**
+- Recall chung trên test là 0,805.
+- Chênh lệch đáng chú ý nhất theo giới tính: nữ 0,736 (n = 345), nam 0,819 (n = 1.489).
+- Chênh lệch lớn hơn theo trình độ học vấn (0,33) đến từ hai nhóm chỉ có 3–4 sinh viên y = 1, nên không đủ tin cậy.
+- Theo ngưỡng đề xuất ở mục 9, chưa thuộc tính nào vượt ngưỡng. Nhận định chi tiết ở `docs/04_governance.md`.
+
+**Ưu tiên (AQ10–AQ12).** Ba phương án AQ10 gần như như nhau ở K = 70. Trên valid, A và C hoà (Coverage@K 0,107), B
+thấp hơn một chút (0,103), nên nhóm chọn phương án đơn giản nhất là A. Theo bảng AQ12 trên valid:
+- Cảnh báo top 10% tương đương 128 ca, cần 1,8 tuần năng lực, Recall 0,18 và precision 0,90.
+- Top 30% tương đương 385 ca, cần 5,5 tuần năng lực, Recall 0,50.
+
+Ngưỡng cuối cùng do P4 chọn: _[điền sau khi chọn]_. Mọi đánh giá ưu tiên chỉ dựa trên dữ liệu lịch sử, **không**
+chứng minh rằng liên hệ sẽ giúp sinh viên hoàn thành môn.
+
+**Khả năng tái lập.** Cùng dữ liệu, cùng `config.yaml` và cùng seed thì cho cùng kết quả. Mỗi bước ghi vào
+`reports/audit_log.jsonl`. Chạy lại `pipeline all` trên các commit đã merge không làm thay đổi `reports/` (đã kiểm tra
+khi tích hợp PR #5).
 
 ## 11. Findings, Discussion & Decision Support
 
@@ -361,6 +474,7 @@ _[Chưa viết]_
 | M4 / M5 | Claude Code: soạn nháp insight EDA, model card, nhận định fairness | Bản nháp có nhãn; chỉ ra AQ10/AQ12 đang tính trên test | _[P2, P3, P4 rà]_ | _[nhóm]_ |
 | M4 / M5 | Claude Code: sửa `prioritize.py` để chọn trên valid | Code + 4 test (PR #6) | Nhóm duyệt PR, chạy lại pipeline | Merge PR #6 |
 | M5 | Claude Code: viết nháp mục 4–7 | Văn bản từ `docs/` và `reports/` | _[P1 rà, đối chiếu số liệu]_ | _[P1]_ |
+| M5 | Claude Code: viết nháp mục 8–10 | Văn bản từ `reports/model_metrics.json` và các report khác | _[P3, P4 rà, đối chiếu số liệu]_ | _[P3, P4]_ |
 | M5 | Claude Code: dựng khung Final Report theo P5 | Khung + 4 bảng bắt buộc | _[P2 rà]_ | _[nhóm]_ |
 
 ## Phụ lục
