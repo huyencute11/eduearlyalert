@@ -1,7 +1,7 @@
 # EDA Findings – Observation · Insight · Evidence · Limitation
 
 > Observation do code tự sinh từ dữ liệu train+valid (tập test được giữ kín).
-> **Insight phải do nhóm viết**: nối observation với một quyết định của stakeholder.
+> **Insight phải do nhóm viết** trong `docs/eda_insights.md` (heading `## <tên file hình>`): nối observation với một quyết định của stakeholder.
 > Không dùng từ 'gây ra', 'tác động', 'sinh viên yếu'.
 
 Số biểu đồ: **11**

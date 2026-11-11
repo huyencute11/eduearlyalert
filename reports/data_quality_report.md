@@ -1,7 +1,7 @@
 # Data Quality Report (tự sinh)
 
 > Sinh bởi `python -m eduearlyalert.pipeline audit`. Không sửa tay – sửa code rồi chạy lại.
-> Phần **Nhận định & xử lý** ở cuối do nhóm viết.
+> Phần **Nhận định & xử lý** ở cuối do nhóm viết trong `docs/data_quality_notes.md`.
 
 ## 1. Kích thước bảng và khoá trùng
 
