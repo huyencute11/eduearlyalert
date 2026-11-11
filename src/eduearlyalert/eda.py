@@ -3,7 +3,8 @@
 Mỗi hàm `aqX_*` = 1 biểu đồ, trả về một dict "finding" gồm câu hỏi, observation
 (tự sinh từ số liệu) và đường dẫn hình. `run()` gom lại thành
 reports/eda_findings.md – bảng Observation–Insight–Evidence–Limitation.
-Cột Insight để TRỐNG (TODO) có chủ đích: insight là việc của con người.
+Cột Insight để TRỐNG (TODO) có chủ đích: insight là việc của con người – nhóm viết trong
+docs/eda_insights.md, `run()` ghép vào theo tên file hình (xem notes.py).
 """
 
 from __future__ import annotations
@@ -17,9 +18,11 @@ from . import plotting
 from .config import Config
 from .governance import audit
 from .kg import add_assessment_key
+from .notes import load_insights
 
 plt = plotting.plt
 OUTCOME_ORDER = ["Distinction", "Pass", "Fail", "Withdrawn"]
+INSIGHT_TODO = "TODO (nhóm viết: điều này có nghĩa gì cho quyết định của ai?)"
 
 
 # ---------------------------------------------------------------------------
@@ -485,12 +488,14 @@ def run(cfg: Config) -> list[dict]:
         "# EDA Findings – Observation · Insight · Evidence · Limitation",
         "",
         "> Observation do code tự sinh từ dữ liệu train+valid (tập test được giữ kín).",
-        "> **Insight phải do nhóm viết**: nối observation với một quyết định của stakeholder.",
+        "> **Insight phải do nhóm viết** trong `docs/eda_insights.md` (heading `## <tên file hình>`): "
+        + "nối observation với một quyết định của stakeholder.",
         "> Không dùng từ 'gây ra', 'tác động', 'sinh viên yếu'.",
         "",
         f"Số biểu đồ: **{len(findings)}**",
         "",
     ]
+    insights = load_insights(cfg.path("eda_insights"))
     for i, f in enumerate(findings, 1):
         lines += [
             f"## {i}. {f['aq']} – {f['question']}",
@@ -500,7 +505,7 @@ def run(cfg: Config) -> list[dict]:
             "| | |",
             "|---|---|",
             f"| **Observation** | {f['observation']} |",
-            "| **Insight** | TODO (nhóm viết: điều này có nghĩa gì cho quyết định của ai?) |",
+            f"| **Insight** | {insights.get(f['figure'], INSIGHT_TODO)} |",
             f"| **Evidence** | `reports/figures/{f['figure']}` |",
             f"| **Limitation** | {f['limitation']} |",
             "",

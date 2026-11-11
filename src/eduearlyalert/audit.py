@@ -13,6 +13,7 @@ import pandas as pd
 from . import data_io
 from .config import Config
 from .governance import audit
+from .notes import load_section
 
 # Khoá chính dự kiến của từng bảng (theo tài liệu OULAD)
 PRIMARY_KEYS = {
@@ -129,7 +130,7 @@ def run(cfg: Config) -> dict:
         "# Data Quality Report (tự sinh)",
         "",
         "> Sinh bởi `python -m eduearlyalert.pipeline audit`. Không sửa tay – sửa code rồi chạy lại.",
-        "> Phần **Nhận định & xử lý** ở cuối do nhóm viết.",
+        "> Phần **Nhận định & xử lý** ở cuối do nhóm viết trong `docs/data_quality_notes.md`.",
         "",
         "## 1. Kích thước bảng và khoá trùng",
         "",
@@ -158,11 +159,18 @@ def run(cfg: Config) -> dict:
         "",
         "## 6. Nhận định & xử lý (nhóm điền)",
         "",
-        "| Vấn đề | Bằng chứng (mục nào ở trên) | Quyết định xử lý | Ảnh hưởng tới AQ |",
-        "|---|---|---|---|",
-        "| TODO | | | |",
-        "",
     ]
+    dq_notes_path = cfg.path("dq_notes")
+    team_notes = load_section(dq_notes_path)
+    if team_notes:
+        lines += [f"> Ghép từ `{dq_notes_path.relative_to(cfg.root).as_posix()}` (nhóm viết).", "", team_notes, ""]
+    else:
+        lines += [
+            "| Vấn đề | Bằng chứng (mục nào ở trên) | Quyết định xử lý | Ảnh hưởng tới AQ |",
+            "|---|---|---|---|",
+            "| TODO | | | |",
+            "",
+        ]
     (reports / "data_quality_report.md").write_text("\n".join(lines), encoding="utf-8")
     audit(cfg, "audit", row_counts=counts)
     return {"row_counts": counts, "module_presentations": mp}
