@@ -374,20 +374,113 @@ khi tích hợp PR #5).
 
 ## 11. Findings, Discussion & Decision Support
 
-<!-- P2 (cả nhóm góp) · trả lời TỪNG AQ ở đúng mức evidence → dùng bảng "Câu trả lời theo AQ" bên dưới
-làm xương sống, viết thêm phần thảo luận. Evidence: docs/eda_insights.md, reports/eda_findings.md. -->
+> **BẢN NHÁP – P2 cần rà và sửa (cả nhóm góp ý).** Claude viết ngày 11/11/2026. Câu trả lời ngắn cho từng AQ nằm ở
+> bảng "Câu trả lời cuối cùng theo Analytical Question"; mục này thảo luận các phát hiện theo từng quyết định của
+> stakeholder. Số liệu từ `reports/` (FFF; EDA trên train + valid, mô hình trên test).
 
-_[Chưa viết]_
+### 11.1. Phát hiện chính theo quyết định
+
+**D3 – Program Manager: quy mô vấn đề và nguồn lực.**
+- Chỉ 46,9% sinh viên FFF hoàn thành môn, và tỷ lệ này ổn định qua các lượt (AQ1). Nhu cầu hỗ trợ lớn và lặp lại
+  mỗi lượt, không phải chuyện riêng của một học kỳ.
+- 51–56% số sinh viên rút môn rút **sau** Tuần 6. Vì vậy cảnh báo ở cuối Tuần 6 vẫn còn thời gian để can thiệp
+  với hơn một nửa nhóm này.
+- Phần còn lại rút trước mốc, nên mô hình không thấy được họ. Nhóm này cần cách hỗ trợ ngay từ đầu môn.
+- Với năng lực giả định 70 ca/tuần, mọi ngưỡng cảnh báo 10–30% đều vượt năng lực (AQ12). Đây là phát hiện quan trọng
+  nhất cho D3: **năng lực cố vấn, không phải độ chính xác của mô hình, mới là giới hạn chính.**
+
+**D1 – Advisor: liên hệ ai trước và nói gì.**
+- Mô hình gradient boosting phân biệt tốt hơn rõ rệt so với luật đơn giản (PR-AUC 0,745 so với 0,528 trên test) và
+  đạt Recall 0,805 (AQ7).
+- Khi chỉ liên hệ được Top-70, những người đứng đầu danh sách hầu như đều cần hỗ trợ (Precision@K 0,957 trên valid).
+- Mỗi ca có lý do cụ thể, dùng ngôn ngữ hỗ trợ:
+  - lý do phổ biến nhất là chưa nộp TMA1 (22% sinh viên tại ngày 41, AQ3);
+  - kế đến là tương tác giảm rõ ở Tuần 4–6 (AQ4: hai nhóm tách nhau mạnh nhất ở Tuần 5–6).
+- Cố vấn vẫn là người quyết định: Risk List chỉ là đề xuất ở trạng thái `pending_review`.
+
+**D2 – Lecturer: điều chỉnh hoạt động và bài đánh giá.**
+- Kết quả TMA1 là mốc kiểm tra sớm có liên hệ mạnh nhất với việc hoàn thành môn:
+  - tỷ lệ hoàn thành chỉ 8% ở nhóm điểm dưới 40, và 11% ở nhóm chưa nộp;
+  - so với 68% ở nhóm 80–100 điểm (AQ5);
+  - liên hệ vẫn còn sau khi điều chỉnh theo tương tác (OR = 0,37/SD).
+- Tỷ lệ sinh viên không có click nào trong tuần tăng từ 19% lên 28% qua 6 tuần (AQ2).
+- Đây là căn cứ để cân nhắc nhắc nhở trước hạn TMA1 và tổ chức hoạt động giữ tương tác ở Tuần 4–6. Đây là **liên hệ,
+  không phải nhân quả**: không thể kết luận rằng tăng tương tác hay nộp TMA1 đúng hạn sẽ làm tỷ lệ hoàn thành tăng lên.
+- KG (AQ6) chưa giúp được D2 ở Tuần 6: trước mốc chỉ có một bài đánh giá, nên mọi concept đều có cùng tỷ lệ.
+
+### 11.2. Thảo luận
+
+**Tiêu chí mô hình và cách dùng thực tế khác nhau.**
+- Tiêu chí chấp nhận Recall ≥ 0,80 đo khả năng phân biệt của mô hình. Để đạt mức này phải cảnh báo 56% sinh viên
+  (1.030 người trên test), vượt xa 70 ca/tuần.
+- Khi dùng thật, hệ thống là công cụ **xếp hạng**. Ở Top-70, nó chỉ tiếp cận được khoảng 10% số sinh viên cần hỗ trợ.
+- Hai con số này không mâu thuẫn, nhưng cần trình bày cạnh nhau để stakeholder không hiểu nhầm "Recall 80%" là
+  "80% sinh viên cần hỗ trợ sẽ được liên hệ".
+- KPI phụ "Timely Support Contact Rate ≥ 80%" trong proposal chỉ đạt được khi năng lực tăng lên nhiều lần. Nhóm cần
+  ghi rõ giả định này.
+
+**Ai bị bỏ sót?**
+- Error analysis cho thấy nhóm bị bỏ sót có mức tương tác và điểm TMA1 cao hơn nhóm được phát hiện.
+- Với dữ liệu đến Tuần 6, họ trông giống người sẽ hoàn thành. Thuật toán tốt hơn khó cải thiện được điều này; cần một
+  mốc kiểm tra sau (ví dụ sau TMA2) hoặc kênh để sinh viên tự tìm hỗ trợ.
+- Vì vậy "không có trong Risk List" không có nghĩa là "không cần hỗ trợ".
+
+**Công bằng.**
+- Chênh lệch Recall đáng chú ý nhất là theo giới tính: nữ 0,74, nam 0,82. Sinh viên nữ chỉ chiếm 18% của FFF.
+- Chênh lệch này chưa vượt ngưỡng đề xuất (0,10), nhưng cần được theo dõi và nêu rõ. Các chênh lệch lớn hơn (trình
+  độ học vấn, vùng) đến từ các nhóm quá nhỏ để kết luận.
+
+**Bài học về dữ liệu.**
+- Lựa chọn module ban đầu (BBB) làm Recall trên test rơi từ 0,80 xuống 0,53, vì cách chấm bài đầu kỳ thay đổi giữa
+  các lượt.
+- Bước audit metadata trước khi mô hình hoá đã phát hiện vấn đề này. Kiểm tra tính ổn định của thiết kế môn học giữa
+  các lượt nên là một bước bắt buộc khi triển khai (rủi ro R10).
+
+### 11.3. Mức độ tin cậy
+
+| Loại kết luận | Mức tin cậy | Lý do |
+|---|---|---|
+| Mô tả (AQ1–AQ3) | Cao trong phạm vi FFF 2013–2014 | Dữ liệu đầy đủ; số liệu ổn định giữa các lượt |
+| Liên hệ (AQ4, AQ5) | Trung bình | Effect size mức vừa; pseudo R² 0,18; dữ liệu quan sát, không nhân quả |
+| Dự báo (AQ7) | Trung bình | Đánh giá trên 1 lượt test; precision phụ thuộc tỷ lệ rút sớm của lượt |
+| Công bằng (AQ9) | Thấp–trung bình | Nhiều nhóm nhỏ; chưa có khoảng tin cậy |
+| Đề xuất (AQ10–AQ12) | Thấp | Chỉ đánh giá trên dữ liệu lịch sử; K là giả định; chưa có dữ liệu về hiệu quả của việc liên hệ |
+| KG (AQ6, AQ11) | Chỉ minh hoạ | Dữ liệu mô phỏng |
 
 ## 12. Limitations & Future Work
 
-<!-- P4 · dataset gaps; khả năng khái quát; giới hạn quan sát/nhân quả; giới hạn mô hình; AQ hoãn; dữ liệu cần thêm.
-Phân biệt "không thấy bằng chứng" với "không có dữ liệu để kiểm tra".
-Gợi ý nội dung: OULAD Anh 2013–14, 1 module STEM; KG mô phỏng (concept thiên về KHXH); chỉ 1 bài đánh giá trước mốc;
-FN trông giống nhóm hoàn thành ở Tuần 1–6; F1 chưa đạt; AQ8 hoãn; mốc Tuần 4, SHAP, LLM, clustering bị cắt;
-AQ10/AQ12 từng tính trên test (đã sửa, PR #6); chênh lệch Recall theo gender. Nguồn: docs/04_governance.md (Risk Register R1–R11). -->
+> **BẢN NHÁP – P4 cần rà và sửa.** Nguồn: Risk Register R1–R11 (`docs/04_governance.md`), AQ Revision Log,
+> `docs/data_quality_notes.md`.
 
-_[Chưa viết]_
+**Bảng 12.1 – Limitation Log.** Cột "Loại" phân biệt *không thấy bằng chứng* (đã kiểm tra nhưng không thấy) với
+*không có dữ liệu để kiểm tra*.
+
+| # | Giới hạn | Loại | Ảnh hưởng | Cách giảm nhẹ / việc tiếp theo |
+|---|---|---|---|---|
+| L1 | Dữ liệu từ Open University (Anh), 2013–2014, học từ xa, một module STEM với 82% sinh viên nam | Khả năng khái quát | Không áp dụng trực tiếp cho đại học Việt Nam hoặc môn khác | Thử trên dữ liệu LMS của trường trước khi dùng (R6) |
+| L2 | Dữ liệu quan sát | Giới hạn nhân quả | Mọi kết quả diagnostic chỉ là liên hệ | Thử nghiệm có đối chứng nếu triển khai thật |
+| L3 | Không có dữ liệu về việc liên hệ/hỗ trợ và kết quả sau đó | **Không có dữ liệu để kiểm tra** | Không biết Risk List có giúp sinh viên hoàn thành môn không (AQ10–AQ12) | Ghi lại quyết định của cố vấn và kết quả trong `audit_log.jsonl` khi chạy thử |
+| L4 | Không có dữ liệu concept/CLO thật | **Không có dữ liệu để kiểm tra** | AQ6 và một phần AQ11 dùng KG **mô phỏng**; concept thiên về KHXH trong khi FFF là STEM | Xây ánh xạ concept với giảng viên môn thật |
+| L5 | Chỉ có 1 bài đánh giá (TMA1) trước ngày 41 | Dữ liệu hạn chế | Feature bài đánh giá ít thông tin; KG không phân biệt được concept ở Tuần 6 | Thêm mốc dự báo sau TMA2 (ngày 47–52) |
+| L6 | F1 trên test 0,661 < 0,75 | Giới hạn mô hình | Nhiều cảnh báo không cần thiết nếu dùng theo ngưỡng | Dùng Top-K và phân tầng; không chỉnh ngưỡng trên test (R11) |
+| L7 | Nhóm bị bỏ sót trông giống nhóm hoàn thành ở Tuần 1–6 | Giới hạn của mốc dự báo | Khoảng 20% sinh viên cần hỗ trợ không được phát hiện | Mốc kiểm tra thứ hai; kênh tự tìm hỗ trợ (R2) |
+| L8 | Tỷ lệ rút trước ngày 41 khác nhau giữa các lượt (test 22%, các lượt khác 11–15%) | Dữ liệu | Precision trên test thấp hơn valid | Theo dõi và hiệu chỉnh lại mỗi lượt |
+| L9 | Chênh lệch Recall theo giới tính (0,08); nhiều nhóm nhân khẩu học quá nhỏ | Fairness | Có thể bỏ sót sinh viên nữ nhiều hơn; chưa có khoảng tin cậy | Báo cáo khoảng tin cậy; theo dõi tầng gần ngưỡng (R3) |
+| L10 | Năng lực K = 70 ca/tuần, baseline 60% và mục tiêu 68% là **giả định** | Giả định | Kết luận AQ10–AQ12 phụ thuộc K | Xác nhận năng lực thật với Program Manager |
+| L11 | Click là proxy của việc học | Đo lường | Không đo được chất lượng học hay học ngoài LMS | Kết hợp dữ liệu khác nếu có |
+| L12 | Một sinh viên có thể học nhiều lượt (7.762 lượt đăng ký, 7.397 sinh viên) | Dữ liệu | Có thể cùng một người xuất hiện ở train và test | Kiểm tra độ nhạy khi loại người học lại |
+
+**AQ hoãn và phần bị cắt.**
+- **AQ8** (dự báo rút môn Tuần 7–12): đã có dữ liệu (`date_unregistration`), nhưng bị hoãn vì thời gian.
+- Các phần bị cắt cùng lý do: phân tích độ nhạy với mốc Tuần 4 (`cutoff_day = 27`), SHAP, clustering hành vi, LLM soạn
+  giải thích.
+
+**Hướng phát triển (theo thứ tự ưu tiên).**
+1. Thêm mốc dự báo sau TMA2 để bắt nhóm bị bỏ sót (L5, L7).
+2. Làm AQ8 và phân tích độ nhạy theo mốc Tuần 4.
+3. Thêm khoảng tin cậy (bootstrap) cho Recall theo nhóm trong `fairness.py` (L9).
+4. Thử nghiệm thật có ghi lại kết quả liên hệ để đánh giá hiệu quả (L3).
+5. Lặp lại trên module khác của OULAD (DDD) và trên dữ liệu của trường để kiểm tra khả năng khái quát (L1).
 
 ## 13. Generative AI Use & Reflection
 
@@ -475,6 +568,7 @@ _[Chưa viết]_
 | M4 / M5 | Claude Code: sửa `prioritize.py` để chọn trên valid | Code + 4 test (PR #6) | Nhóm duyệt PR, chạy lại pipeline | Merge PR #6 |
 | M5 | Claude Code: viết nháp mục 4–7 | Văn bản từ `docs/` và `reports/` | _[P1 rà, đối chiếu số liệu]_ | _[P1]_ |
 | M5 | Claude Code: viết nháp mục 8–10 | Văn bản từ `reports/model_metrics.json` và các report khác | _[P3, P4 rà, đối chiếu số liệu]_ | _[P3, P4]_ |
+| M5 | Claude Code: viết nháp mục 11–12 | Thảo luận theo D1–D3, Limitation Log 12 dòng | _[P2, P4 rà; kiểm tra không có claim nhân quả]_ | _[P2, P4]_ |
 | M5 | Claude Code: dựng khung Final Report theo P5 | Khung + 4 bảng bắt buộc | _[P2 rà]_ | _[nhóm]_ |
 
 ## Phụ lục

@@ -51,6 +51,7 @@
   - Có khung nháp (Claude): `docs/final_report.md`, đã ghi người viết đề xuất từng mục và điền nháp 4 bảng. Chờ P2 rà
   - Có nháp mục 4–7 (Claude). Chờ P1 rà
   - Có nháp mục 8–10 (Claude). Chờ P3 (mục 8, 10) và P4 (mục 9) rà
+  - Có nháp mục 11–12 (Claude). Chờ P2 (mục 11) và P4 (mục 12) rà
 - [ ] **P4** – hoàn thiện Risk Register ≥ 6 rủi ro (`docs/04_governance.md`)
   - Có nháp (Claude): thêm R10 (lệch thiết kế giữa các lượt), R11 (precision thấp). Đã có 11 rủi ro. Chờ P4 rà
 
