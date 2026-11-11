@@ -1,23 +1,37 @@
 attribute,group,n,prevalence,selection_rate,recall,fnr,precision,suppressed
-gender,F,191,0.356,0.398,0.794,0.206,0.711,False
-gender,M,172,0.43,0.419,0.851,0.149,0.875,False
-region,London Region,75,0.4,0.387,0.8,0.2,0.828,False
-region,North Region,80,0.45,0.475,0.833,0.167,0.789,False
-region,Scotland,67,0.358,0.343,0.792,0.208,0.826,False
-region,South East Region,62,0.339,0.371,0.905,0.095,0.826,False
-region,Wales,79,0.392,0.443,0.806,0.194,0.714,False
-disability,N,325,0.391,0.4,0.803,0.197,0.785,False
-disability,Y,38,0.395,0.474,1.0,0.0,0.833,False
-age_band,0-35,258,0.349,0.357,0.778,0.222,0.761,False
-age_band,35-55,100,0.5,0.53,0.9,0.1,0.849,False
-age_band,55<=,5,,,,,,True
-imd_band,0-10%,51,0.392,0.412,0.75,0.25,0.714,False
-imd_band,10-20,42,0.381,0.357,0.75,0.25,0.8,False
-imd_band,20-30%,51,0.392,0.373,0.8,0.2,0.842,False
-imd_band,30-40%,71,0.324,0.31,0.826,0.174,0.864,False
-imd_band,40-50%,61,0.328,0.459,0.9,0.1,0.643,False
-imd_band,50-60%,38,0.447,0.447,0.824,0.176,0.824,False
-imd_band,Không rõ,49,0.531,0.531,0.885,0.115,0.885,False
-highest_education,A Level or Equivalent,131,0.42,0.458,0.836,0.164,0.767,False
-highest_education,HE Qualification,117,0.359,0.359,0.81,0.19,0.81,False
-highest_education,Lower Than A Level,115,0.391,0.4,0.822,0.178,0.804,False
+gender,F,345,0.351,0.504,0.736,0.264,0.511,False
+gender,M,1489,0.4,0.575,0.819,0.181,0.57,False
+region,East Anglian Region,137,0.321,0.555,0.705,0.295,0.408,False
+region,East Midlands Region,133,0.383,0.526,0.784,0.216,0.571,False
+region,Ireland,88,0.466,0.568,0.878,0.122,0.72,False
+region,London Region,166,0.416,0.627,0.826,0.174,0.548,False
+region,North Region,132,0.273,0.583,0.806,0.194,0.377,False
+region,North Western Region,183,0.459,0.601,0.869,0.131,0.664,False
+region,Scotland,216,0.444,0.565,0.771,0.229,0.607,False
+region,South East Region,121,0.306,0.488,0.757,0.243,0.475,False
+region,South Region,176,0.341,0.517,0.85,0.15,0.56,False
+region,South West Region,124,0.387,0.653,0.896,0.104,0.531,False
+region,Wales,136,0.434,0.537,0.763,0.237,0.616,False
+region,West Midlands Region,130,0.362,0.508,0.787,0.213,0.561,False
+region,Yorkshire Region,92,0.489,0.554,0.733,0.267,0.647,False
+disability,N,1639,0.372,0.554,0.805,0.195,0.541,False
+disability,Y,195,0.549,0.626,0.804,0.196,0.705,False
+age_band,0-35,1334,0.404,0.594,0.809,0.191,0.551,False
+age_band,35-55,491,0.354,0.479,0.799,0.201,0.591,False
+age_band,55<=,9,,,,,,True
+imd_band,0-10%,179,0.475,0.609,0.824,0.176,0.642,False
+imd_band,10-20,198,0.47,0.591,0.774,0.226,0.615,False
+imd_band,20-30%,177,0.435,0.531,0.779,0.221,0.638,False
+imd_band,30-40%,209,0.368,0.522,0.714,0.286,0.505,False
+imd_band,40-50%,175,0.383,0.526,0.836,0.164,0.609,False
+imd_band,50-60%,166,0.373,0.602,0.839,0.161,0.52,False
+imd_band,60-70%,152,0.414,0.579,0.841,0.159,0.602,False
+imd_band,70-80%,177,0.373,0.605,0.864,0.136,0.533,False
+imd_band,80-90%,155,0.381,0.581,0.78,0.22,0.511,False
+imd_band,90-100%,156,0.314,0.487,0.796,0.204,0.513,False
+imd_band,Không rõ,90,0.211,0.533,0.895,0.105,0.354,False
+highest_education,A Level or Equivalent,810,0.369,0.542,0.826,0.174,0.563,False
+highest_education,HE Qualification,257,0.272,0.537,0.814,0.186,0.413,False
+highest_education,Lower Than A Level,744,0.458,0.595,0.783,0.217,0.603,False
+highest_education,No Formal quals,10,0.4,0.6,1.0,0.0,0.667,False
+highest_education,Post Graduate Qualification,13,0.231,0.308,0.667,0.333,0.5,False

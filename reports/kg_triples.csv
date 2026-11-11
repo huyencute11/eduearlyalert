@@ -25,17 +25,14 @@ R08,COVERS,C08,"synthetic – Nhóm 3 tự xây dựng, tham khảo cấu trúc 
 R09,COVERS,C01,"synthetic – Nhóm 3 tự xây dựng, tham khảo cấu trúc CLO của một môn nhập môn KHXH mẫu"
 R09,COVERS,C02,"synthetic – Nhóm 3 tự xây dựng, tham khảo cấu trúc CLO của một môn nhập môn KHXH mẫu"
 R09,COVERS,C05,"synthetic – Nhóm 3 tự xây dựng, tham khảo cấu trúc CLO của một môn nhập môn KHXH mẫu"
-BBB:CMA1,ASSESSES,C01,synthetic
-BBB:CMA1,ASSESSES,C02,synthetic
-BBB:TMA1,ASSESSES,C03,synthetic
-BBB:TMA1,ASSESSES,C07,synthetic
-BBB:TMA1,ASSESSES,C08,synthetic
-BBB:CMA2,ASSESSES,C04,synthetic
-BBB:CMA2,ASSESSES,C05,synthetic
-BBB:TMA2,ASSESSES,C05,synthetic
-BBB:TMA2,ASSESSES,C06,synthetic
-BBB:TMA2,ASSESSES,C07,synthetic
-BBB:CMA3,ASSESSES,C02,synthetic
-BBB:CMA3,ASSESSES,C06,synthetic
-BBB:TMA3,ASSESSES,C06,synthetic
-BBB:TMA3,ASSESSES,C08,synthetic
+FFF:TMA1,ASSESSES,C01,synthetic
+FFF:TMA1,ASSESSES,C03,synthetic
+FFF:TMA1,ASSESSES,C05,synthetic
+FFF:TMA2,ASSESSES,C02,synthetic
+FFF:TMA2,ASSESSES,C05,synthetic
+FFF:TMA3,ASSESSES,C04,synthetic
+FFF:TMA3,ASSESSES,C06,synthetic
+FFF:TMA4,ASSESSES,C06,synthetic
+FFF:TMA4,ASSESSES,C07,synthetic
+FFF:TMA5,ASSESSES,C07,synthetic
+FFF:TMA5,ASSESSES,C08,synthetic

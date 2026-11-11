@@ -1,4 +1,4 @@
 alert_share,n_alerted,recall,precision,false_alarms,weeks_of_advisor_capacity,fits_capacity
-0.1,36,0.239,0.944,2,0.51,True
-0.2,73,0.486,0.945,4,1.04,False
-0.3,109,0.662,0.862,15,1.56,False
+0.1,183,0.237,0.929,13,2.61,False
+0.2,367,0.418,0.817,67,5.24,False
+0.3,550,0.545,0.711,159,7.86,False
