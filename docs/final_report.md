@@ -60,35 +60,179 @@ _[Chưa viết]_
 
 ## 4. Data Requirements & Dataset Selection
 
-<!-- P1 · nguồn M2 · unit of analysis; target; variables; time; population; candidate datasets; lý do chọn; license.
-Evidence: docs/02_data.md mục 1, 3, 6. GAP: Data Requirement Matrix và Dataset Selection Matrix (các dataset ứng viên
-đã so sánh ở M2) KHÔNG có trong repo → lấy từ báo cáo M2. -->
+> **BẢN NHÁP – P1 cần rà và sửa.** Claude viết ngày 11/11/2026 từ `docs/02_data.md`, `docs/data_quality_notes.md`,
+> `reports/` và truy vấn trên OULAD thật (FFF).
 
-_[Chưa viết]_
+Để trả lời các AQ ở mục 3 cho quyết định D1–D3, dữ liệu cần thoả bốn yêu cầu (Bảng 4.1). Thứ nhất, có **kết quả cuối
+môn** của từng sinh viên để làm nhãn. Thứ hai, có **dấu vết hành vi theo thời gian** (tương tác, nộp bài, điểm),
+đủ chi tiết để chỉ lấy phần xảy ra trước mốc dự báo. Thứ ba, có **nhiều lượt giảng dạy** để chia train/valid/test theo
+thời gian. Thứ tư, có thuộc tính nhân khẩu học **chỉ để kiểm tra công bằng**.
+
+**Bảng 4.1 – Data Requirement Matrix (rút gọn).**
+
+| Yêu cầu | Phục vụ AQ | Đơn vị / độ chi tiết | Trường dữ liệu OULAD | Mức đáp ứng |
+|---|---|---|---|---|
+| Kết quả cuối môn | AQ1, AQ4–AQ7, AQ9–AQ12 | Sinh viên × lượt | `studentInfo.final_result` | Đủ |
+| Thời điểm rút môn | AQ1, AQ8, lọc quần thể | Ngày | `studentRegistration.date_unregistration` | Đủ (chỉ dùng để lọc, không làm feature) |
+| Tương tác học tập theo thời gian | AQ2, AQ4, AQ7 | Ngày × tài nguyên | `studentVle.sum_click`, `vle.activity_type` | Đủ |
+| Nộp bài và điểm các bài đầu kỳ | AQ3, AQ5, AQ7 | Bài đánh giá | `assessments`, `studentAssessment` | Một phần: FFF chỉ có 1 bài trước ngày 41 |
+| Nội dung/kiến thức của bài đánh giá | AQ6, AQ11 | Concept, CLO | Không có | **GAP** → dùng KG mô phỏng |
+| Nhiều lượt giảng dạy | Chia theo thời gian | Lượt | `code_presentation` | Đủ (4 lượt) |
+| Thuộc tính nhạy cảm (chỉ audit) | AQ9 | Sinh viên | `gender, region, disability, age_band, imd_band, highest_education` | Đủ |
+| Hiệu quả của can thiệp | AQ10–AQ12 (kiểm chứng) | Liên hệ × kết quả | Không có | **GAP**: chỉ đánh giá được trên dữ liệu lịch sử |
+
+**Lựa chọn dataset.** Nhóm chọn **Open University Learning Analytics Dataset (OULAD)** (Kuzilek et al., 2017). Đây là
+dataset công khai, giấy phép CC-BY 4.0, và đã ẩn danh. OULAD là một trong số ít dataset mở có đồng thời ba thứ:
+click VLE theo ngày, lịch sử nộp bài kèm điểm, và kết quả cuối môn cho nhiều lượt của cùng một môn. Nhờ đó dữ liệu
+đáp ứng cả bốn yêu cầu trên. Phiên bản dùng trong report là bản trên UCI Machine Learning Repository (#349),
+tải ngày 11/11/2026: một file zip 46,7 MB gồm 7 file CSV.
+
+> **GAP – lấy từ báo cáo M2:** Dataset Selection Matrix so sánh các dataset ứng viên, kèm search log.
+> Không có trong repo, nên nhóm cần chép lại từ M2 (không viết lại theo trí nhớ).
 
 ## 5. Dataset Description & Requirement–Data Fit
 
-<!-- P1 · nguồn M2 + M3 · 7 bảng, khoá, kích thước, coverage, gaps, AQ status keep/modify/defer/drop.
-Evidence: docs/02_data.md (Data Inventory, Data Dictionary), reports/data_dictionary_auto.csv,
-reports/module_presentation_counts.csv. Nêu lý do chọn FFF (BBB 2014J lệch thiết kế bài đánh giá). -->
+> **BẢN NHÁP – P1 cần rà và sửa.**
 
-_[Chưa viết]_
+**Cấu trúc.** OULAD gồm 7 bảng, nối với nhau qua khoá `(code_module, code_presentation, id_student)`,
+`id_assessment` và `id_site` (Bảng 5.1). Mô tả đầy đủ từng cột nằm ở Data Dictionary (Phụ lục A).
+
+**Bảng 5.1 – Các bảng OULAD** (nguồn: `reports/data_quality_report.md` mục 1).
+
+| Bảng | Số dòng (toàn bộ OULAD) | Khoá | Nội dung |
+|---|---:|---|---|
+| `courses` | 22 | module, lượt | Độ dài từng lượt |
+| `assessments` | 206 | `id_assessment` | Loại bài (TMA, CMA, Exam), hạn nộp, trọng số |
+| `vle` | 6.364 | `id_site` | Tài nguyên VLE, loại hoạt động |
+| `studentInfo` | 32.593 | module, lượt, `id_student` | Nhân khẩu học, `final_result` |
+| `studentRegistration` | 32.593 | module, lượt, `id_student` | Ngày đăng ký, ngày rút |
+| `studentAssessment` | 173.912 | `id_assessment`, `id_student` | Ngày nộp, điểm, `is_banked` |
+| `studentVle` | 10.655.280 | không có khoá duy nhất | Click theo ngày × tài nguyên |
+
+**Phạm vi cuối: module FFF, 4 lượt.** Ban đầu nhóm định dùng BBB. Khi chạy bước audit trên dữ liệu thật, nhóm thấy
+ở BBB 2014J (lượt dự định làm test) bài TMA đầu kỳ có trọng số 0 và điểm gần như chỉ 1 hoặc 100, trong khi ba lượt còn
+lại có trọng số 5 và điểm 0–100. Nếu giữ BBB, mô hình sẽ được đánh giá trên một lượt có cách chấm bài khác. FFF có thiết
+kế giống nhau ở cả 4 lượt: một bài TMA trọng số 12,5, hạn ngày 19 (2013) hoặc ngày 24 (2014). Quyết định này dựa trên
+metadata `assessments.csv` (xem Q1, mục 6). FFF có 7.762 lượt đăng ký của 7.397 sinh viên (Bảng 5.2).
+
+**Bảng 5.2 – Lượt giảng dạy của FFF** (nguồn: `reports/module_presentation_counts.csv`, `reports/cohort_flow.csv`).
+
+| Lượt | Vai trò | Sinh viên đăng ký | Tỷ lệ hoàn thành | Tỷ lệ rút môn |
+|---|---|---:|---:|---:|
+| 2013B | train | 1.614 | 48,5% | 25,5% |
+| 2013J | train | 2.283 | 48,0% | 29,6% |
+| 2014B | valid | 1.500 | 43,6% | 30,8% |
+| 2014J | test | 2.365 | 47,2% | 36,2% |
+
+**Bảng 5.3 – AQ–Data Fit Matrix.**
+
+| AQ | Dữ liệu thực tế | Độ phù hợp | Trạng thái |
+|---|---|---|---|
+| AQ1 | `final_result`, `date_unregistration` | Đầy đủ | Keep |
+| AQ2 | `studentVle`, `vle` | Đầy đủ; click chỉ là proxy của việc học | Keep |
+| AQ3 | `assessments`, `studentAssessment` | Chỉ 1 bài (TMA1) trước ngày 41 | Modify (chỉ TMA1) |
+| AQ4, AQ5 | Feature tương tác + bài đánh giá | Đầy đủ cho phân tích liên hệ | Keep |
+| AQ6 | Không có dữ liệu concept | Thiếu → KG mô phỏng | Modify (minh hoạ) |
+| AQ7 | 34 feature ≤ ngày 41 | Đầy đủ | Keep |
+| AQ8 | `date_unregistration` | Có dữ liệu, thiếu thời gian | Defer |
+| AQ9 | 6 thuộc tính nhạy cảm | Đầy đủ; một số nhóm rất nhỏ | Keep |
+| AQ10–AQ12 | Dự đoán AQ7 + năng lực K (giả định) | Không có dữ liệu về can thiệp thật | Keep (chỉ đánh giá trên dữ liệu lịch sử) |
 
 ## 6. Data Understanding & Data Quality
 
-<!-- P1 · nguồn M3 · phân bố; missing; duplicates; outliers; imbalance; temporal coverage; representativeness; sensitive fields.
-Evidence: reports/data_quality_report.md (mục 6 = docs/data_quality_notes.md, Q1–Q12), reports/figures/aq1_*, aq2_*.
-Trả lời câu tự kiểm tra: vấn đề dữ liệu nào có thể thay đổi kết luận? (Q1 thiết kế bài đánh giá; tỷ lệ rút sớm ở test). -->
+> **BẢN NHÁP – P1 cần rà và sửa.** Chi tiết 12 vấn đề (Q1–Q12) ở `reports/data_quality_report.md` mục 6.
 
-_[Chưa viết]_
+**Tính toàn vẹn.** Các bảng có khoá đều không trùng khoá. Không có dòng con nào thiếu bảng cha: kiểm tra 4 quan hệ
+khoá ngoại đều cho 0 dòng mồ côi. Riêng `studentVle` không có khoá duy nhất: ở FFF có 540.673 tổ hợp
+(sinh viên × tài nguyên × ngày) xuất hiện nhiều hơn một dòng. Nhóm coi đây là nhiều lần truy cập, nên cộng dồn
+`sum_click` thay vì xoá trùng (Q2).
+
+**Giá trị thiếu.** Phần lớn giá trị thiếu là thiếu có nghĩa, không phải lỗi:
+- `date_unregistration` thiếu nghĩa là sinh viên chưa rút môn (Q7).
+- Bài Exam không có ngày (Q11).
+- `vle.week_from/week_to` thiếu ở 58% tài nguyên FFF. Nhóm không dùng hai cột này mà tính tuần từ ngày truy cập (Q10).
+
+Các giá trị thiếu ảnh hưởng tới phân tích đều nhỏ:
+- `imd_band` thiếu 4,7%. Chỉ dùng trong audit fairness, giữ thành nhóm "Không rõ" (Q5).
+- `date_registration` thiếu 11 dòng (Q6).
+- `score` thiếu 46 bài đã nộp (Q8).
+
+**Phân bố và outlier.**
+- `sum_click` có đuôi rất dài: giá trị lớn nhất ở FFF là 4.098, trong khi phân vị 99,9% là 102. Nhóm giữ nguyên
+  vì đây có thể là hành vi thật (Q4).
+- 256.062 dòng click có ngày âm, tức là hoạt động trước khi môn bắt đầu (Q3).
+- Điểm TMA1 lệch về phía cao, trung vị 82 (`reports/eda_findings.md`, hình AQ3).
+
+**Mất cân bằng nhãn.** Tỷ lệ không hoàn thành (y = 1) là 51–56% trên toàn bộ đăng ký. Trong quần thể dự báo (sinh viên
+còn theo học tại ngày 41), tỷ lệ này là 39–49%, nên nhãn khá cân bằng. Nhóm vẫn ưu tiên PR-AUC và Recall thay cho
+accuracy (mục 9).
+
+**Độ phủ thời gian.** Bốn lượt từ 2/2013 đến 10/2014, hai lượt bắt đầu tháng 2 (B) và hai lượt bắt đầu tháng 10 (J).
+Lượt test (2014J) có **tỷ lệ rút trước ngày 41 cao nhất (22%)**, so với 11–15% ở ba lượt kia. Vì vậy tỷ lệ y = 1 trong
+quần thể dự báo của test chỉ 39%, thấp hơn các tập khác. Sự khác biệt này có ảnh hưởng tới precision trên test (mục 10).
+
+**Tính đại diện.** FFF là một môn STEM của Open University (Anh), với sinh viên chủ yếu học từ xa:
+- 81,8% là nam, 74% dưới 35 tuổi, 9,5% khai báo khuyết tật.
+- Kết luận không tự động áp dụng cho bối cảnh đại học Việt Nam hay cho các môn khác (rủi ro R6).
+- Có 365 lượt đăng ký là của sinh viên học lại hoặc học nhiều lượt (7.762 lượt / 7.397 sinh viên). Thông tin này
+  được phản ánh qua `num_of_prev_attempts`.
+
+**Trường nhạy cảm.** Có 6 thuộc tính nhạy cảm, được tách vào `sensitive.parquet`. Chỉ bước kiểm tra công bằng
+(`fairness.py`) được đọc file này (Fairness Gate). `id_student` được thay bằng `pid` (SHA-256 kèm salt) trước khi
+ghi ra bất kỳ output nào.
+
+**Vấn đề dữ liệu nào có thể thay đổi kết luận?** Có hai vấn đề:
+1. **Thiết kế bài đánh giá khác nhau giữa các lượt (Q1).** Lỗi này đã làm Recall rơi từ 0,80 xuống 0,53 với BBB,
+   và đã được xử lý bằng cách đổi module.
+2. **Tỷ lệ rút sớm khác nhau giữa các lượt.** Điều này làm precision trên test thấp hơn valid. Đây là giới hạn
+   cần nêu, không thể sửa bằng cách chỉnh ngưỡng.
 
 ## 7. Data Preparation & Analytic-ready Data
 
-<!-- P1 · nguồn M3 · cleaning, join, feature, xử lý missing, KIỂM SOÁT LEAKAGE, version.
-Evidence: docs/03_pipeline.md, docs/02_data.md mục 3–4, reports/cohort_flow.csv, src/eduearlyalert/leakage.py.
-Cần Preparation Decision Matrix (bước | quyết định | lý do | rủi ro leakage). -->
+> **BẢN NHÁP – P1 cần rà và sửa.**
 
-_[Chưa viết]_
+Toàn bộ quá trình chuẩn bị dữ liệu là một pipeline Python tái lập được:
+`audit → cohort → features → kg → eda → model → explain → fairness → prioritize`.
+Pipeline chạy bằng lệnh `python -m eduearlyalert.pipeline all`. Mọi tham số (module, lượt, `cutoff_day = 41`,
+ngưỡng chấp nhận, K) nằm ở `config.yaml`. CSV được đọc bằng DuckDB với `nullstr='?'`, vì OULAD ghi giá trị thiếu
+bằng dấu `?`.
+
+**Bảng 7.1 – Preparation Decision Matrix.**
+
+| Bước | Quyết định | Lý do | Kiểm soát leakage / rủi ro |
+|---|---|---|---|
+| Đơn vị phân tích | 1 dòng = sinh viên × lượt | Một sinh viên có thể học nhiều lượt | – |
+| Nhãn | y = 1 nếu Fail hoặc Withdrawn | Cả hai đều là "không hoàn thành", là điều cố vấn muốn ngăn | `final_result` chỉ dùng làm nhãn |
+| Quần thể dự báo | Loại người rút ≤ ngày 41 và người đăng ký sau ngày 41 | Chỉ dự báo cho người còn có thể hỗ trợ được | `date_unregistration` chỉ dùng để lọc |
+| Chia dữ liệu | Theo lượt: train 2013B+2013J, valid 2014B, test 2014J | Mô phỏng dùng dữ liệu cũ để dự báo lượt mới | Không chia ngẫu nhiên; chọn mô hình/ngưỡng trên valid |
+| Tuần | `date < 0` → tuần 0; 0–6 → tuần 1; …; 35–41 → tuần 6 | Khớp lịch học | Chỉ dùng ngày ≤ 41 |
+| Feature tương tác | Click theo tuần, ngày hoạt động, tuần không hoạt động, thay đổi tương tác, tỷ trọng theo loại tài nguyên | AQ2, AQ4 | Click sau ngày 41 bị loại |
+| Feature bài đánh giá | Số bài đến hạn/đúng hạn/muộn/chưa nộp, điểm, điểm có trọng số | AQ3, AQ5 | Chỉ bài hạn ≤ 41; bài nộp sau 41 = chưa nộp; loại `is_banked`; không dùng Exam |
+| Giá trị thiếu | Click thiếu = 0; điểm thiếu → bỏ qua (TB) hoặc 0 (có trọng số); còn lại điền trung vị kèm cột chỉ báo | Không có click nghĩa là không hoạt động | Trung vị học trên train (trong pipeline mô hình) |
+| Thuộc tính nhạy cảm | Tách riêng, không vào feature | Fairness Gate | `leakage.py` báo lỗi nếu lọt vào |
+| Định danh | `id_student` → `pid` | Bảo vệ quyền riêng tư | Không có `id_student` trong output |
+
+**Kiểm soát leakage tự động.** Mỗi lần tạo feature và trước khi huấn luyện, `leakage.assert_no_leakage` sẽ dừng
+pipeline nếu xảy ra một trong ba trường hợp:
+1. Có cột bị cấm trong feature, gồm `final_result`, `date_unregistration`, `module_presentation_length`, các định danh,
+   hoặc thuộc tính nhạy cảm.
+2. Ngày lớn nhất được dùng vượt ngày 41. Lần chạy cuối: VLE dùng đến ngày 41, hạn nộp đến ngày 24, ngày nộp đến
+   ngày 41.
+3. Kiểm tra này có test tự động trong `tests/test_leakage.py`.
+
+**Dữ liệu cuối (analytic-ready).** `data/processed/features.parquet` gồm 7.762 dòng (sinh viên × lượt) và
+**34 feature** (danh sách trong `feature_list.json`; định nghĩa ở Phụ lục A). Quần thể dự báo có 6.500 dòng:
+train 3.383, valid 1.283, test 1.834. Mỗi lần chạy, pipeline tự sinh lại `reports/cohort_flow.csv` và ghi vào audit log
+(`reports/audit_log.jsonl`).
+
+**Tái lập.** Theo license, OULAD được phép chia sẻ lại. Tuy vậy, repo không commit dữ liệu (cả bản gốc lẫn bản đã xử lý)
+vì dung lượng và theo nguyên tắc governance. Cách tái tạo:
+1. Tải zip từ UCI #349 vào `data/raw/`.
+2. Chạy `pip install -r requirements.txt && pip install -e .`
+3. Đặt `EDU_SALT` trong `.env`.
+4. Chạy `python -m eduearlyalert.pipeline all`.
+
+`pytest` (44 test) kiểm tra pipeline trên dữ liệu giả cùng schema.
 
 ## 8. Modeling / Analysis Strategy
 
@@ -102,7 +246,7 @@ _[Chưa viết]_
 
 <!-- P4 · M4 Level 1 · metric; baseline; split theo presentation; tiêu chí; leakage/fairness/interpretability checks.
 Evidence: config.yaml (acceptance, scope), docs/04_governance.md (human gates, fairness), reports/model_metrics.json.
-Viết rõ: ngưỡng chọn trên valid; test chạm 1 lần. ⚠️ AQ10/AQ12 hiện tính trên test – xem mục 12 / việc mở. -->
+Viết rõ: ngưỡng chọn trên valid; test chạm 1 lần. AQ10/AQ12 cũng chọn trên valid (PR #6), test chỉ báo cáo. -->
 
 _[Chưa viết]_
 
@@ -128,7 +272,7 @@ _[Chưa viết]_
 Phân biệt "không thấy bằng chứng" với "không có dữ liệu để kiểm tra".
 Gợi ý nội dung: OULAD Anh 2013–14, 1 module STEM; KG mô phỏng (concept thiên về KHXH); chỉ 1 bài đánh giá trước mốc;
 FN trông giống nhóm hoàn thành ở Tuần 1–6; F1 chưa đạt; AQ8 hoãn; mốc Tuần 4, SHAP, LLM, clustering bị cắt;
-AQ10/AQ12 tính trên test; chênh lệch Recall theo gender. Nguồn: docs/04_governance.md (Risk Register R1–R11). -->
+AQ10/AQ12 từng tính trên test (đã sửa, PR #6); chênh lệch Recall theo gender. Nguồn: docs/04_governance.md (Risk Register R1–R11). -->
 
 _[Chưa viết]_
 
@@ -165,9 +309,9 @@ _[Chưa viết]_
 | AQ7 | Early Detection Recall ≥ 80% | Xác suất không hoàn thành tại cuối Tuần 6? | Predictive | Feature ≤ ngày 41; SV còn theo học | 34 feature, không thuộc tính nhạy cảm | Quần thể dự báo; chia theo lượt; leakage check | Rule vs logistic vs gboost; chọn theo PR-AUC valid | Test: Recall 0,805 ✔, F1 0,661 ✘, PR-AUC 0,745 (rule 0,528) | D1 liên hệ ai trước | Answered (F1 chưa đạt) |
 | AQ8 | Early Detection | Rút môn Tuần 7–12? | Predictive | Ngày rút | `date_unregistration` | – | – | GAP – chưa làm | – | Deferred (thiếu thời gian) |
 | AQ9 | Trách nhiệm/công bằng | Hiệu năng có nhất quán giữa các nhóm? | Predictive (audit) | Thuộc tính nhạy cảm (chỉ audit) | `gender, region, disability, age_band, imd_band, highest_education` | Không vào mô hình (Fairness Gate) | Recall/FNR theo nhóm | Chênh lệch đáng chú ý: gender 0,08 (F 0,74 / M 0,82); các chênh lệch lớn hơn đến từ nhóm nhỏ | G3 – duyệt fairness | Partial – thiếu khoảng tin cậy |
-| AQ10 | Timely Support Contact ≥ 80% | Ai liên hệ trước khi năng lực có hạn (K)? | Prescriptive | Risk score + năng lực | Dự đoán AQ7, K = 70 (assumption) | Top-K, phân tầng | So sánh 3 phương án theo Coverage@K | 3 phương án như nhau ở K = 70; **đang tính trên test** | D1 | Partial – cần tính lại trên valid |
+| AQ10 | Timely Support Contact ≥ 80% | Ai liên hệ trước khi năng lực có hạn (K)? | Prescriptive | Risk score + năng lực | Dự đoán AQ7, K = 70 (assumption) | Top-K, phân tầng | So sánh 3 phương án theo Coverage@K; chọn trên valid | Valid: chọn A (A = C: Coverage@K 0,107, Precision@K 0,957; B 0,103). Test: cả 3 như nhau (0,093) | D1 | Answered (trên dữ liệu lịch sử) |
 | AQ11 | Support quality | Loại hỗ trợ nào cho từng SV? | Prescriptive | Reason codes + concept gap | Reason codes, KG mô phỏng | Luật gán loại hỗ trợ | Luật (có người duyệt) | Phân bố đề xuất trong Risk List; chưa đánh giá hiệu quả | D1 (cố vấn duyệt) | Partial – chưa kiểm chứng |
-| AQ12 | Timely Support Contact | Ngưỡng cảnh báo 10/20/30% – đánh đổi? | Prescriptive | Risk score + năng lực | Dự đoán AQ7 | Kịch bản ngưỡng | Recall/precision/tải công việc | Cả 3 ngưỡng vượt năng lực 70 ca/tuần; **đang tính trên test** | D3 | Partial – cần tính lại trên valid |
+| AQ12 | Timely Support Contact | Ngưỡng cảnh báo 10/20/30% – đánh đổi? | Prescriptive | Risk score + năng lực | Dự đoán AQ7 | Kịch bản ngưỡng | Recall/precision/tải công việc; bảng chọn trên valid | Valid: 10% = 128 ca (1,8 tuần năng lực), Recall 0,18, Precision 0,90; cả 3 ngưỡng vượt 70 ca/tuần | D3 | Partial – P4 chưa chọn ngưỡng |
 
 ## AQ Revision Log
 
@@ -180,7 +324,7 @@ _[Chưa viết]_
 | AQ3 | Các bài đánh giá đầu kỳ | FFF chỉ có 1 bài hạn ≤ ngày 41 | Chỉ TMA1 | Modify | Giới hạn của dữ liệu | Feature bài đánh giá ít thông tin |
 | AQ6 | Concept/CLO cần hỗ trợ | Không có dữ liệu concept thật | Giữ, dùng KG mô phỏng | Modify | OULAD không có ánh xạ concept | Chỉ minh hoạ cơ chế, không kết luận |
 | AQ8 | Rút môn Tuần 7–12 | – | – | Defer | Thiếu thời gian | Ghi vào Future Work |
-| AQ10, AQ12 | Ưu tiên, ngưỡng | Đang được tính trên tập test | Tính lại trên valid | Modify | Không chọn tham số bằng test | Cần sửa `prioritize.py` |
+| AQ10, AQ12 | Ưu tiên, ngưỡng | Bảng chọn từng được tính trên tập test | Chọn trên valid, test chỉ báo cáo | Modify | Không chọn tham số bằng test | Đã sửa `prioritize.py` (PR #6) |
 | Khác | Mốc Tuần 4, SHAP, LLM, clustering | – | – | Drop | Thiếu thời gian (checklist) | Dùng permutation importance thay SHAP |
 
 ## Câu trả lời cuối cùng theo Analytical Question
@@ -199,9 +343,9 @@ _[Chưa viết]_
 | AQ7 | `reports/model_results.md` | gboost, ngưỡng từ valid | Recall 0,805, F1 0,661 | FN trông giống nhóm hoàn thành | Hỗ trợ D1, luôn có người duyệt |
 | AQ8 | – | – | GAP | Hoãn | Future Work |
 | AQ9 | `reports/fairness_report.md` | Recall theo nhóm | Gender chênh 0,08 | Nhóm nhỏ dao động lớn | Ghi vào Limitations; theo dõi tầng gần ngưỡng |
-| AQ10 | `reports/prioritization_report.md` | Coverage@K | 3 phương án như nhau ở K = 70 | Tính trên test | Chờ tính lại trên valid |
+| AQ10 | `reports/prioritization_report.md` | Coverage@K, chọn trên valid | Chọn A (chỉ theo điểm rủi ro); ở K = 70 các phương án gần như như nhau | Đánh giá trên dữ liệu lịch sử; K là giả định | Dùng phương án đơn giản nhất (A) |
 | AQ11 | `reports/risk_list.csv` | Luật | Phân bố loại hỗ trợ | Chưa đánh giá hiệu quả | Là gợi ý, cố vấn quyết định |
-| AQ12 | `reports/aq12_threshold_scenarios.csv` | Kịch bản | Mọi ngưỡng vượt năng lực | Tính trên test; K là giả định | Cần thêm năng lực hoặc Top-K |
+| AQ12 | `reports/aq12_threshold_scenarios.csv` (valid) | Kịch bản | Mọi ngưỡng vượt năng lực (10% = 128 ca trên valid) | K là giả định; P4 chưa chọn | Cần thêm năng lực hoặc chỉ liên hệ Top-K |
 
 ## AI Decision Log
 
@@ -215,6 +359,8 @@ _[Chưa viết]_
 | M3 / M5 | Claude Code: tải OULAD, chạy pipeline, kiểm tra dữ liệu | Phát hiện BBB 2014J có TMA đầu kỳ trọng số 0, điểm gần nhị phân; đề xuất đổi sang FFF | _[P1 đối chiếu `assessments.csv`]_ | Nhóm chọn FFF (PR #2) |
 | M3 / M5 | Claude Code: soạn nháp data quality notes, data inventory | 12 vấn đề Q1–Q12, bảng inventory | _[P1 rà]_ | _[P1]_ |
 | M4 / M5 | Claude Code: soạn nháp insight EDA, model card, nhận định fairness | Bản nháp có nhãn; chỉ ra AQ10/AQ12 đang tính trên test | _[P2, P3, P4 rà]_ | _[nhóm]_ |
+| M4 / M5 | Claude Code: sửa `prioritize.py` để chọn trên valid | Code + 4 test (PR #6) | Nhóm duyệt PR, chạy lại pipeline | Merge PR #6 |
+| M5 | Claude Code: viết nháp mục 4–7 | Văn bản từ `docs/` và `reports/` | _[P1 rà, đối chiếu số liệu]_ | _[P1]_ |
 | M5 | Claude Code: dựng khung Final Report theo P5 | Khung + 4 bảng bắt buộc | _[P2 rà]_ | _[nhóm]_ |
 
 ## Phụ lục

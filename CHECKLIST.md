@@ -49,6 +49,7 @@
 - [ ] **P2** – tạo khung Final Report theo format Milestone P5 (Abstract + mục 1–14 + Traceability Matrix,
       AQ Revision Log, bảng trả lời theo AQ, AI Decision Log), chia ai viết mục nào
   - Có khung nháp (Claude): `docs/final_report.md`, đã ghi người viết đề xuất từng mục và điền nháp 4 bảng. Chờ P2 rà
+  - Có nháp mục 4–7 (Claude). Chờ P1 rà
 - [ ] **P4** – hoàn thiện Risk Register ≥ 6 rủi ro (`docs/04_governance.md`)
   - Có nháp (Claude): thêm R10 (lệch thiết kế giữa các lượt), R11 (precision thấp). Đã có 11 rủi ro. Chờ P4 rà
 
@@ -69,8 +70,8 @@
   - Có nháp (Claude): `docs/04_governance.md` mục "Fairness audit AQ9". Đề xuất ngưỡng > 0.10 với nhóm ≥ 30 sinh viên y=1. P4 chốt
 - [ ] **P4** – chọn ngưỡng cảnh báo (bảng AQ12) và phương án ưu tiên (bảng AQ10)
   - Ngưỡng chọn: `____ %` · Phương án: `____`
-  - ⚠️ CHƯA chọn: `prioritize.py` đang tính bảng AQ10/AQ12 trên tập TEST. Chọn từ hai bảng này là
-    chọn tham số bằng test (vi phạm quy tắc 3). Cần sửa code để tính trên valid trước, rồi mới chọn
+  - Đã sửa (PR #6): hai bảng giờ tính trên VALID. Phương án do code chọn trên valid: A (chỉ theo điểm rủi ro).
+    P4 chọn ngưỡng từ bảng AQ12 (valid) trong `reports/prioritization_report.md`; cả 3 mức đều vượt 70 ca/tuần
 
 ## Ngày 4 – Viết tài liệu kỹ thuật
 
