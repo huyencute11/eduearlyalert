@@ -23,7 +23,7 @@ paths:
 # Chạy `python -m eduearlyalert.pipeline audit` để xem bảng module × presentation
 # rồi mới chốt.
 scope:
-  module: BBB
+  module: FFF                       # BBB 2014J: TMA đầu kỳ weight=0, điểm ~nhị phân → lệch thiết kế
   presentations:
     train: [2013B, 2013J]
     valid: [2014B]                  # dùng để chọn ngưỡng, KHÔNG dùng test

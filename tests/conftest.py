@@ -8,6 +8,7 @@ import sys
 from pathlib import Path
 
 import pytest
+import yaml
 
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / "src"))
@@ -19,7 +20,10 @@ from eduearlyalert.pipeline import main as pipeline_main  # noqa: E402
 @pytest.fixture(scope="session")
 def cfg(tmp_path_factory):
     root = tmp_path_factory.mktemp("edu")
-    shutil.copy(ROOT / "config.yaml", root / "config.yaml")
+    # Dữ liệu giả chỉ sinh BBB/DDD, nên test cố định module = BBB bất kể config.yaml thật chọn module nào.
+    test_cfg = yaml.safe_load((ROOT / "config.yaml").read_text(encoding="utf-8"))
+    test_cfg["scope"]["module"] = "BBB"
+    (root / "config.yaml").write_text(yaml.safe_dump(test_cfg, allow_unicode=True), encoding="utf-8")
     shutil.copytree(ROOT / "kg", root / "kg")
     subprocess.run(
         [sys.executable, str(ROOT / "scripts" / "make_fake_oulad.py"),
