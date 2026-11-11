@@ -1,49 +1,49 @@
 code_presentation,group,week,n_group,median,suppressed
-2013B,Hoàn thành,1,197,37.0,False
-2013B,Hoàn thành,2,197,38.0,False
-2013B,Hoàn thành,3,197,39.0,False
-2013B,Hoàn thành,4,197,39.0,False
-2013B,Hoàn thành,5,197,39.0,False
-2013B,Hoàn thành,6,197,35.0,False
-2013B,Không hoàn thành,1,165,8.0,False
-2013B,Không hoàn thành,2,165,6.0,False
-2013B,Không hoàn thành,3,165,7.0,False
-2013B,Không hoàn thành,4,165,7.0,False
-2013B,Không hoàn thành,5,165,8.0,False
-2013B,Không hoàn thành,6,165,6.0,False
-2013J,Hoàn thành,1,218,35.0,False
-2013J,Hoàn thành,2,218,34.0,False
-2013J,Hoàn thành,3,218,36.5,False
-2013J,Hoàn thành,4,218,36.0,False
-2013J,Hoàn thành,5,218,34.0,False
-2013J,Hoàn thành,6,218,36.0,False
-2013J,Không hoàn thành,1,145,6.0,False
-2013J,Không hoàn thành,2,145,8.0,False
-2013J,Không hoàn thành,3,145,6.0,False
-2013J,Không hoàn thành,4,145,6.0,False
-2013J,Không hoàn thành,5,145,6.0,False
-2013J,Không hoàn thành,6,145,6.0,False
-2014B,Hoàn thành,1,189,36.0,False
-2014B,Hoàn thành,2,189,35.0,False
-2014B,Hoàn thành,3,189,40.0,False
-2014B,Hoàn thành,4,189,35.0,False
-2014B,Hoàn thành,5,189,34.0,False
-2014B,Hoàn thành,6,189,36.0,False
-2014B,Không hoàn thành,1,171,8.0,False
-2014B,Không hoàn thành,2,171,8.0,False
-2014B,Không hoàn thành,3,171,8.0,False
-2014B,Không hoàn thành,4,171,7.0,False
-2014B,Không hoàn thành,5,171,5.0,False
-2014B,Không hoàn thành,6,171,6.0,False
-train+valid,Hoàn thành,1,604,36.0,False
-train+valid,Hoàn thành,2,604,36.0,False
-train+valid,Hoàn thành,3,604,38.0,False
-train+valid,Hoàn thành,4,604,36.0,False
-train+valid,Hoàn thành,5,604,36.0,False
-train+valid,Hoàn thành,6,604,36.0,False
-train+valid,Không hoàn thành,1,481,8.0,False
-train+valid,Không hoàn thành,2,481,7.0,False
-train+valid,Không hoàn thành,3,481,7.0,False
-train+valid,Không hoàn thành,4,481,6.0,False
-train+valid,Không hoàn thành,5,481,6.0,False
-train+valid,Không hoàn thành,6,481,6.0,False
+2013B,Hoàn thành,1,782,106.0,False
+2013B,Hoàn thành,2,782,105.5,False
+2013B,Hoàn thành,3,782,163.5,False
+2013B,Hoàn thành,4,782,113.5,False
+2013B,Hoàn thành,5,782,107.5,False
+2013B,Hoàn thành,6,782,103.0,False
+2013B,Không hoàn thành,1,651,54.0,False
+2013B,Không hoàn thành,2,651,50.0,False
+2013B,Không hoàn thành,3,651,107.0,False
+2013B,Không hoàn thành,4,651,39.0,False
+2013B,Không hoàn thành,5,651,25.0,False
+2013B,Không hoàn thành,6,651,24.0,False
+2013J,Hoàn thành,1,1095,112.0,False
+2013J,Hoàn thành,2,1095,97.0,False
+2013J,Hoàn thành,3,1095,146.0,False
+2013J,Hoàn thành,4,1095,104.0,False
+2013J,Hoàn thành,5,1095,98.0,False
+2013J,Hoàn thành,6,1095,91.0,False
+2013J,Không hoàn thành,1,855,53.0,False
+2013J,Không hoàn thành,2,855,44.0,False
+2013J,Không hoàn thành,3,855,76.0,False
+2013J,Không hoàn thành,4,855,23.0,False
+2013J,Không hoàn thành,5,855,17.0,False
+2013J,Không hoàn thành,6,855,15.0,False
+2014B,Hoàn thành,1,654,105.0,False
+2014B,Hoàn thành,2,654,92.5,False
+2014B,Hoàn thành,3,654,110.5,False
+2014B,Hoàn thành,4,654,119.0,False
+2014B,Hoàn thành,5,654,85.0,False
+2014B,Hoàn thành,6,654,67.5,False
+2014B,Không hoàn thành,1,629,49.0,False
+2014B,Không hoàn thành,2,629,31.0,False
+2014B,Không hoàn thành,3,629,32.0,False
+2014B,Không hoàn thành,4,629,62.0,False
+2014B,Không hoàn thành,5,629,17.0,False
+2014B,Không hoàn thành,6,629,9.0,False
+train+valid,Hoàn thành,1,2531,108.0,False
+train+valid,Hoàn thành,2,2531,99.0,False
+train+valid,Hoàn thành,3,2531,144.0,False
+train+valid,Hoàn thành,4,2531,111.0,False
+train+valid,Hoàn thành,5,2531,98.0,False
+train+valid,Hoàn thành,6,2531,88.0,False
+train+valid,Không hoàn thành,1,2135,52.0,False
+train+valid,Không hoàn thành,2,2135,42.0,False
+train+valid,Không hoàn thành,3,2135,73.0,False
+train+valid,Không hoàn thành,4,2135,41.0,False
+train+valid,Không hoàn thành,5,2135,20.0,False
+train+valid,Không hoàn thành,6,2135,15.0,False

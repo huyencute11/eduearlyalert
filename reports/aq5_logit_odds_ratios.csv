@@ -1,6 +1,6 @@
 ,odds_ratio_per_SD,ci_low,ci_high,p_value
-first_assess_score,0.9071,0.7313,1.1251,0.3749
-share_missing,1.174,0.9284,1.4847,0.1804
-n_late,1.0228,0.8601,1.2163,0.7986
-active_days_total,0.1276,0.097,0.1678,0.0
-engagement_change,0.7719,0.6505,0.9159,0.003
+first_assess_score,0.3709,0.3188,0.4315,0.0
+share_missing,0.6918,0.5871,0.8153,0.0
+n_late,1.3139,1.2258,1.4083,0.0
+active_days_total,0.5445,0.503,0.5894,0.0
+engagement_change,0.7631,0.7091,0.8212,0.0

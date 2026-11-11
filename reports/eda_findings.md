@@ -12,7 +12,7 @@ Số biểu đồ: **11**
 
 | | |
 |---|---|
-| **Observation** | Completion rate theo lượt: 2013B 49.2%, 2013J 54.5%, 2014B 47.2%. Toàn bộ: 50.3% (n=1200). |
+| **Observation** | Completion rate theo lượt: 2013B 48.5%, 2013J 48.0%, 2014B 43.6%. Toàn bộ: 46.9% (n=5397). |
 | **Insight** | TODO (nhóm viết: điều này có nghĩa gì cho quyết định của ai?) |
 | **Evidence** | `reports/figures/aq1_outcomes_by_presentation.png` |
 | **Limitation** | Dữ liệu Anh 2013–2014; baseline 60% trong proposal là assumption, cần cập nhật theo số này. |
@@ -23,7 +23,7 @@ Số biểu đồ: **11**
 
 | | |
 |---|---|
-| **Observation** | Trong số sinh viên rút môn, tỷ lệ rút SAU mốc dự báo: 2013B 67%, 2013J 58%, 2014B 64% → đây là cửa sổ còn can thiệp được. |
+| **Observation** | Trong số sinh viên rút môn, tỷ lệ rút SAU mốc dự báo: 2013B 56%, 2013J 51%, 2014B 53% → đây là cửa sổ còn can thiệp được. |
 | **Insight** | TODO (nhóm viết: điều này có nghĩa gì cho quyết định của ai?) |
 | **Evidence** | `reports/figures/aq1_cumulative_withdrawal.png` |
 | **Limitation** | Ngày rút môn có thể là ngày ghi nhận hành chính, không phải ngày thực sự ngừng học. |
@@ -34,7 +34,7 @@ Số biểu đồ: **11**
 
 | | |
 |---|---|
-| **Observation** | 3 loại tài nguyên nhiều click nhất: oucontent (61 click/SV), forumng (36 click/SV), homepage (33 click/SV). |
+| **Observation** | 3 loại tài nguyên nhiều click nhất: oucontent (199 click/SV), forumng (168 click/SV), homepage (119 click/SV). |
 | **Insight** | TODO (nhóm viết: điều này có nghĩa gì cho quyết định của ai?) |
 | **Evidence** | `reports/figures/aq2_heatmap_week_activity.png` |
 | **Limitation** | Click là proxy của tương tác, không đo được chất lượng học (góp ý của Lecturer). |
@@ -45,7 +45,7 @@ Số biểu đồ: **11**
 
 | | |
 |---|---|
-| **Observation** | Tỷ lệ sinh viên 0 click: T1 19%, T2 20%, T3 21%, T4 23%, T5 22%, T6 25%. |
+| **Observation** | Tỷ lệ sinh viên 0 click: T1 19%, T2 21%, T3 19%, T4 23%, T5 26%, T6 28%. |
 | **Insight** | TODO (nhóm viết: điều này có nghĩa gì cho quyết định của ai?) |
 | **Evidence** | `reports/figures/aq2_clicks_by_week_box.png` |
 | **Limitation** | Tổng hợp theo tuần làm mất dao động trong tuần. |
@@ -56,7 +56,7 @@ Số biểu đồ: **11**
 
 | | |
 |---|---|
-| **Observation** | Tỷ lệ chưa nộp tại mốc: CMA1 33%, CMA2 43%, TMA1 34%. |
+| **Observation** | Tỷ lệ chưa nộp tại mốc: TMA1 22%. |
 | **Insight** | TODO (nhóm viết: điều này có nghĩa gì cho quyết định của ai?) |
 | **Evidence** | `reports/figures/aq3_submission_status.png` |
 | **Limitation** | Bài nộp sau ngày 41 bị tính là 'chưa nộp' vì chưa quan sát được tại mốc dự báo. |
@@ -67,7 +67,7 @@ Số biểu đồ: **11**
 
 | | |
 |---|---|
-| **Observation** | Điểm trung vị: CMA1 72, CMA2 71, TMA1 71. |
+| **Observation** | Điểm trung vị: TMA1 82. |
 | **Insight** | TODO (nhóm viết: điều này có nghĩa gì cho quyết định của ai?) |
 | **Evidence** | `reports/figures/aq3_score_distribution.png` |
 | **Limitation** | Chỉ tính bài đã nộp; sinh viên không nộp không xuất hiện trong histogram. |
@@ -78,7 +78,7 @@ Số biểu đồ: **11**
 
 | | |
 |---|---|
-| **Observation** | Chỉ báo khác biệt lớn nhất (Cliff's δ, p Holm): active_days_total δ=0.77 (lớn), p=6.3e-106; clicks_total δ=0.72 (lớn), p=7.5e-92; clicks_pre_start δ=0.66 (lớn), p=9.7e-77. |
+| **Observation** | Chỉ báo khác biệt lớn nhất (Cliff's δ, p Holm): active_days_total δ=0.46 (vừa), p=1.1e-160; clicks_total δ=0.46 (vừa), p=6.7e-158; inactive_weeks δ=-0.35 (vừa), p=4.4e-132. |
 | **Insight** | TODO (nhóm viết: điều này có nghĩa gì cho quyết định của ai?) |
 | **Evidence** | `reports/figures/aq4_engagement_by_outcome.png` |
 | **Limitation** | Khác biệt/liên hệ, KHÔNG phải nhân quả. Với n lớn, p nhỏ là dễ – đọc effect size. |
@@ -89,7 +89,7 @@ Số biểu đồ: **11**
 
 | | |
 |---|---|
-| **Observation** | Tỷ số trung vị click (không hoàn thành / hoàn thành): T1 0.24, T2 0.22, T3 0.21, T4 0.19, T5 0.19, T6 0.19. |
+| **Observation** | Tỷ số trung vị click (không hoàn thành / hoàn thành): T1 0.49, T2 0.43, T3 0.51, T4 0.38, T5 0.21, T6 0.18. |
 | **Insight** | TODO (nhóm viết: điều này có nghĩa gì cho quyết định của ai?) |
 | **Evidence** | `reports/figures/aq4_weekly_median_clicks.png` |
 | **Limitation** | Trung vị che khuất sự đa dạng trong từng nhóm. |
@@ -100,7 +100,7 @@ Số biểu đồ: **11**
 
 | | |
 |---|---|
-| **Observation** | Tỷ lệ hoàn thành: <40 35%, 40–60 44%, 60–80 69%, 80–100 80%, Chưa nộp 34%. |
+| **Observation** | Tỷ lệ hoàn thành: <40 8%, 40–60 29%, 60–80 53%, 80–100 68%, Chưa nộp 11%. |
 | **Insight** | TODO (nhóm viết: điều này có nghĩa gì cho quyết định của ai?) |
 | **Evidence** | `reports/figures/aq5_completion_by_first_score.png` |
 | **Limitation** | Liên hệ, không nhân quả; nhóm 'chưa nộp' gộp nhiều lý do khác nhau. |
@@ -111,7 +111,7 @@ Số biểu đồ: **11**
 
 | | |
 |---|---|
-| **Observation** | OR/SD: first_assess_score 0.91, share_missing 1.17, n_late 1.02, active_days_total 0.13, engagement_change 0.77. Pseudo R² = 0.399. |
+| **Observation** | OR/SD: first_assess_score 0.37, share_missing 0.69, n_late 1.31, active_days_total 0.54, engagement_change 0.76. Pseudo R² = 0.184. |
 | **Insight** | TODO (nhóm viết: điều này có nghĩa gì cho quyết định của ai?) |
 | **Evidence** | `reports/figures/aq5_logit_coefficients.png` |
 | **Limitation** | Mô hình giải thích, không phải dự báo; các biến tương quan nhau nên hệ số có thể không ổn định. |
@@ -122,7 +122,7 @@ Số biểu đồ: **11**
 
 | | |
 |---|---|
-| **Observation** | Concept có tỷ lệ cần hỗ trợ cao nhất ở nhóm không hoàn thành: C04 58%, C05 58%, C03 49%. |
+| **Observation** | Concept có tỷ lệ cần hỗ trợ cao nhất ở nhóm không hoàn thành: C01 20%, C03 20%, C05 20%. |
 | **Insight** | TODO (nhóm viết: điều này có nghĩa gì cho quyết định của ai?) |
 | **Evidence** | `reports/figures/aq6_concept_gaps.png` |
 | **Limitation** | Ánh xạ concept là DỮ LIỆU MÔ PHỎNG và ở mức bài, không phải mức câu hỏi. |

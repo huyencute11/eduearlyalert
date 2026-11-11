@@ -1,6 +1,6 @@
 indicator,median_completed,median_not_completed,cliffs_delta,p_value,p_holm,magnitude
-clicks_total,230.0,48.0,0.7199,0.0,0.0,lớn
-active_days_total,28.0,10.0,0.774,0.0,0.0,lớn
-inactive_weeks,0.0,1.0,-0.596,0.0,0.0,lớn
-engagement_change,0.0,-0.08,0.1052,0.0029,0.0029,không đáng kể
-clicks_pre_start,53.0,11.0,0.6556,0.0,0.0,lớn
+clicks_total,730.0,336.0,0.4551,0.0,0.0,vừa
+active_days_total,30.0,17.0,0.4592,0.0,0.0,vừa
+inactive_weeks,0.0,1.0,-0.3514,0.0,0.0,vừa
+engagement_change,-0.1916,-0.5096,0.1953,0.0,0.0,nhỏ
+clicks_pre_start,89.0,33.0,0.3182,0.0,0.0,nhỏ
