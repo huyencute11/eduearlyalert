@@ -1,0 +1,278 @@
+{
+  "tag": "week6",
+  "started": "2026-11-12 22:33:11",
+  "seed": 42,
+  "python": "3.12.3",
+  "sklearn": "1.9.1",
+  "xgboost": "3.4.1",
+  "numpy": "2.5.4",
+  "pandas": "3.1.1",
+  "features_path": "data/processed/features.parquet",
+  "features_sha256": "6034d0036d1ff11d140c9ea5f2628a8c1cf08d6ac14f0b2c5ed862a4cd490618",
+  "cutoff_day": 41,
+  "n_features": 34,
+  "n": {
+    "train": 3383,
+    "valid": 1283,
+    "test": 1834
+  },
+  "n_pos": {
+    "train": 1506,
+    "valid": 629,
+    "test": 717
+  },
+  "binary_features": [
+    "n_assess_due",
+    "n_on_time",
+    "n_late",
+    "n_missing",
+    "share_missing",
+    "first_assess_missing"
+  ],
+  "lr_grid": [
+    {
+      "C": 0.001,
+      "valid_prauc": 0.7753264017681528
+    },
+    {
+      "C": 0.01,
+      "valid_prauc": 0.7813142785495458
+    },
+    {
+      "C": 0.1,
+      "valid_prauc": 0.7828428878677638
+    },
+    {
+      "C": 1.0,
+      "valid_prauc": 0.783191173769598
+    },
+    {
+      "C": 10.0,
+      "valid_prauc": 0.7830180110923561
+    }
+  ],
+  "gb_grid": [
+    {
+      "max_depth": 2,
+      "learning_rate": 0.03,
+      "min_child_weight": 1,
+      "best_iteration": 122,
+      "valid_prauc": 0.7836723689182714
+    },
+    {
+      "max_depth": 2,
+      "learning_rate": 0.03,
+      "min_child_weight": 5,
+      "best_iteration": 163,
+      "valid_prauc": 0.7808335817231186
+    },
+    {
+      "max_depth": 2,
+      "learning_rate": 0.1,
+      "min_child_weight": 1,
+      "best_iteration": 35,
+      "valid_prauc": 0.7815252952650567
+    },
+    {
+      "max_depth": 2,
+      "learning_rate": 0.1,
+      "min_child_weight": 5,
+      "best_iteration": 35,
+      "valid_prauc": 0.7789126135711868
+    },
+    {
+      "max_depth": 3,
+      "learning_rate": 0.03,
+      "min_child_weight": 1,
+      "best_iteration": 127,
+      "valid_prauc": 0.7833632577055119
+    },
+    {
+      "max_depth": 3,
+      "learning_rate": 0.03,
+      "min_child_weight": 5,
+      "best_iteration": 123,
+      "valid_prauc": 0.7828555511149441
+    },
+    {
+      "max_depth": 3,
+      "learning_rate": 0.1,
+      "min_child_weight": 1,
+      "best_iteration": 41,
+      "valid_prauc": 0.7830913765048086
+    },
+    {
+      "max_depth": 3,
+      "learning_rate": 0.1,
+      "min_child_weight": 5,
+      "best_iteration": 23,
+      "valid_prauc": 0.7795324308585958
+    },
+    {
+      "max_depth": 4,
+      "learning_rate": 0.03,
+      "min_child_weight": 1,
+      "best_iteration": 130,
+      "valid_prauc": 0.7817327894189892
+    },
+    {
+      "max_depth": 4,
+      "learning_rate": 0.03,
+      "min_child_weight": 5,
+      "best_iteration": 104,
+      "valid_prauc": 0.7813319278219696
+    },
+    {
+      "max_depth": 4,
+      "learning_rate": 0.1,
+      "min_child_weight": 1,
+      "best_iteration": 23,
+      "valid_prauc": 0.7809926436916865
+    },
+    {
+      "max_depth": 4,
+      "learning_rate": 0.1,
+      "min_child_weight": 5,
+      "best_iteration": 18,
+      "valid_prauc": 0.7799994190847659
+    }
+  ],
+  "lr_best": {
+    "C": 1.0
+  },
+  "gb_best": {
+    "max_depth": 2,
+    "learning_rate": 0.03,
+    "min_child_weight": 1,
+    "best_iteration": 122,
+    "valid_prauc": 0.7836723689182714
+  },
+  "calibration_valid": {
+    "gb": {
+      "intercept": 0.0907009169459343,
+      "intercept_ci": [
+        -0.038229943439364436,
+        0.2325679589062929
+      ],
+      "slope": 1.0669971704483032,
+      "slope_ci": [
+        0.9263300463557244,
+        1.2206389844417571
+      ],
+      "miscalibrated": false
+    },
+    "lr": {
+      "intercept": 0.062339690033583854,
+      "intercept_ci": [
+        -0.07494446344743332,
+        0.20572380057845785
+      ],
+      "slope": 0.8860329808459633,
+      "slope_ci": [
+        0.7726216253785365,
+        1.0147135748154315
+      ],
+      "miscalibrated": false
+    }
+  },
+  "platt_applied": {
+    "gb": false,
+    "lr": false
+  },
+  "threshold_valid": {
+    "gb": 0.3479793071746826,
+    "lr": 0.3314720084971619
+  },
+  "mean_pred": {
+    "gb": {
+      "train": 0.4453096091747284,
+      "valid": 0.4753684997558594,
+      "test": 0.45356887578964233
+    },
+    "lr": {
+      "train": 0.4451404013523318,
+      "valid": 0.47361524035325026,
+      "test": 0.45113194251374567
+    }
+  },
+  "decision": {
+    "prauc_gb_minus_lr_valid": 0.00048119514867339674,
+    "ci95": [
+      -0.009017598537181742,
+      0.010233025873598648
+    ],
+    "rule": "giữ gradient boosting chỉ khi khoảng tin cậy của chênh lệch nằm trên 0",
+    "chosen": "logistic regression",
+    "decided_at": "2026-11-12 22:33:14"
+  },
+  "train_vs_valid": {
+    "gb": {
+      "train": 0.7854367817521805,
+      "valid": 0.7836723689182714,
+      "roc_train": 0.8021697617273758,
+      "roc_valid": 0.7844875366461983,
+      "gap_prauc": 0.001764412833909046,
+      "gap_roc": 0.01768222508117745
+    },
+    "lr": {
+      "train": 0.7736902695170262,
+      "valid": 0.783191173769598,
+      "roc_train": 0.7898411680926799,
+      "roc_valid": 0.7847877559156566,
+      "gap_prauc": -0.009500904252571774,
+      "gap_roc": 0.005053412177023264
+    }
+  },
+  "complexity": {
+    "gb_trees": 123,
+    "gb_splits": 369,
+    "gb_leaves": 492,
+    "gb_grid_configs": 12,
+    "lr_parameters": 35,
+    "lr_grid_configs": 5
+  },
+  "finished_core": "2026-11-12 22:33:17",
+  "error_test": {
+    "FN_total": 116,
+    "FN_fail": 58,
+    "FN_withdrawn": 58,
+    "FN_withdrawn_median_day": 135.0,
+    "TP_withdrawn_median_day": 95.0,
+    "recall_fail": 0.8520408163265306,
+    "recall_withdrawn": 0.8215384615384616
+  },
+  "roc_auc_by_run": {
+    "valid": 0.7847877559156566,
+    "test": 0.8062940057860704
+  },
+  "aq10": {
+    "valid": {
+      "coverage@70": 0.10333863275039745,
+      "diff_vs_random_ci": [
+        0.04153436323781746,
+        0.05727208315667272
+      ],
+      "diff_vs_rule_ci": [
+        0.002129061080712854,
+        0.014882822587418427
+      ]
+    },
+    "test": {
+      "coverage@70": 0.09205020920502092,
+      "diff_vs_random_ci": [
+        0.046298276240876964,
+        0.060827756908013626
+      ],
+      "diff_vs_rule_ci": [
+        -0.0007543977756844405,
+        0.010389330927986145
+      ]
+    }
+  },
+  "top70_test": {
+    "tma1_missing_share": 0.9,
+    "idle_share": 0.2714285714285714,
+    "median_clicks_total": 0.0
+  },
+  "finished": "2026-11-12 22:33:40"
+}

@@ -1,0 +1,209 @@
+{
+  "tag": "week4",
+  "started": "2026-11-12 21:38:52",
+  "seed": 42,
+  "python": "3.12.3",
+  "sklearn": "1.9.1",
+  "xgboost": "3.4.1",
+  "numpy": "2.5.4",
+  "pandas": "3.1.1",
+  "features_path": "data/sensitivity_week4/processed/features.parquet",
+  "features_sha256": "264ef14968093f89a0589a1d62b6f46ddc9ec4d2b6ebcee56418167af21030a8",
+  "cutoff_day": 27,
+  "n_features": 32,
+  "n": {
+    "train": 3437,
+    "valid": 1299,
+    "test": 1859
+  },
+  "n_pos": {
+    "train": 1560,
+    "valid": 645,
+    "test": 742
+  },
+  "binary_features": [
+    "n_assess_due",
+    "n_on_time",
+    "n_late",
+    "n_missing",
+    "share_missing",
+    "first_assess_missing"
+  ],
+  "lr_grid": [
+    {
+      "C": 0.001,
+      "valid_prauc": 0.7578892876639768
+    },
+    {
+      "C": 0.01,
+      "valid_prauc": 0.7610175064463655
+    },
+    {
+      "C": 0.1,
+      "valid_prauc": 0.759974143420031
+    },
+    {
+      "C": 1.0,
+      "valid_prauc": 0.7592995033301013
+    },
+    {
+      "C": 10.0,
+      "valid_prauc": 0.7592604042527349
+    }
+  ],
+  "gb_grid": [
+    {
+      "max_depth": 2,
+      "learning_rate": 0.03,
+      "min_child_weight": 1,
+      "best_iteration": 63,
+      "valid_prauc": 0.7637592037446312
+    },
+    {
+      "max_depth": 2,
+      "learning_rate": 0.03,
+      "min_child_weight": 5,
+      "best_iteration": 62,
+      "valid_prauc": 0.7645340571371971
+    },
+    {
+      "max_depth": 2,
+      "learning_rate": 0.1,
+      "min_child_weight": 1,
+      "best_iteration": 29,
+      "valid_prauc": 0.7582100573445021
+    },
+    {
+      "max_depth": 2,
+      "learning_rate": 0.1,
+      "min_child_weight": 5,
+      "best_iteration": 25,
+      "valid_prauc": 0.7619503176826659
+    },
+    {
+      "max_depth": 3,
+      "learning_rate": 0.03,
+      "min_child_weight": 1,
+      "best_iteration": 68,
+      "valid_prauc": 0.769243190456683
+    },
+    {
+      "max_depth": 3,
+      "learning_rate": 0.03,
+      "min_child_weight": 5,
+      "best_iteration": 73,
+      "valid_prauc": 0.7694773252077192
+    },
+    {
+      "max_depth": 3,
+      "learning_rate": 0.1,
+      "min_child_weight": 1,
+      "best_iteration": 15,
+      "valid_prauc": 0.769139826002982
+    },
+    {
+      "max_depth": 3,
+      "learning_rate": 0.1,
+      "min_child_weight": 5,
+      "best_iteration": 16,
+      "valid_prauc": 0.7686083230318616
+    },
+    {
+      "max_depth": 4,
+      "learning_rate": 0.03,
+      "min_child_weight": 1,
+      "best_iteration": 63,
+      "valid_prauc": 0.7698871591784618
+    },
+    {
+      "max_depth": 4,
+      "learning_rate": 0.03,
+      "min_child_weight": 5,
+      "best_iteration": 74,
+      "valid_prauc": 0.7701568665443577
+    },
+    {
+      "max_depth": 4,
+      "learning_rate": 0.1,
+      "min_child_weight": 1,
+      "best_iteration": 23,
+      "valid_prauc": 0.7675196161854276
+    },
+    {
+      "max_depth": 4,
+      "learning_rate": 0.1,
+      "min_child_weight": 5,
+      "best_iteration": 18,
+      "valid_prauc": 0.7722602598978612
+    }
+  ],
+  "lr_best": {
+    "C": 0.01
+  },
+  "gb_best": {
+    "max_depth": 4,
+    "learning_rate": 0.1,
+    "min_child_weight": 5,
+    "best_iteration": 18,
+    "valid_prauc": 0.7722602598978612
+  },
+  "calibration_valid": {
+    "gb": {
+      "intercept": 0.17255933582782745,
+      "intercept_ci": [
+        0.022994969598948957,
+        0.31635266765952097
+      ],
+      "slope": 1.2626733779907227,
+      "slope_ci": [
+        1.095649841427803,
+        1.4660735875368116
+      ],
+      "miscalibrated": true
+    },
+    "lr": {
+      "intercept": 0.1320638711499767,
+      "intercept_ci": [
+        -0.006306951767041797,
+        0.2726875097491286
+      ],
+      "slope": 0.9624135005232125,
+      "slope_ci": [
+        0.8257974308683763,
+        1.1061536979958961
+      ],
+      "miscalibrated": false
+    }
+  },
+  "platt_applied": {
+    "gb": true,
+    "lr": false
+  },
+  "threshold_valid": {
+    "gb": 0.35620608925819397,
+    "lr": 0.33899739856921146
+  },
+  "mean_pred": {
+    "gb": {
+      "train": 0.4769916236400604,
+      "valid": 0.4965303838253021,
+      "test": 0.47882384061813354
+    },
+    "lr": {
+      "train": 0.4539835707173949,
+      "valid": 0.4688867737184647,
+      "test": 0.4527303449418286
+    }
+  },
+  "decision": {
+    "prauc_gb_minus_lr_valid": 0.011242753451495724,
+    "ci95": [
+      -0.0005525299249638125,
+      0.022214001570521898
+    ],
+    "rule": "giữ gradient boosting chỉ khi khoảng tin cậy của chênh lệch nằm trên 0",
+    "chosen": "logistic regression",
+    "decided_at": "2026-11-12 21:38:55"
+  },
+  "finished_core": "2026-11-12 21:38:58"
+}

@@ -3,6 +3,8 @@ data/raw/*
 data/interim/*
 data/processed/*
 !data/**/.gitkeep
+# dữ liệu dựng lại cho phân tích độ nhạy (M4 Level 2)
+data/sensitivity_*/
 *.duckdb
 *.parquet
 *.joblib
