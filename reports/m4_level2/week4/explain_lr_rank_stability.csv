@@ -1,0 +1,33 @@
+feature,group,rank_full,rank_median,rank_p2_5,rank_p97_5,top5_freq,same_sign_freq
+weighted_score_so_far,Điểm TMA1 thấp,1,1.0,1.0,2.0,1.0,1.0
+mean_days_early,Nộp bài sát hạn,2,3.0,2.0,8.0,0.906,1.0
+active_days_total,Ít tương tác VLE,3,3.0,2.0,12.0,0.851,1.0
+n_on_time,Chưa nộp TMA1,4,4.0,2.0,9.0,0.888,1.0
+clicks_w4,Ít tương tác VLE,5,4.0,2.0,17.0,0.706,1.0
+studied_credits,Học lại / khối lượng tín chỉ,6,8.0,3.0,24.0,0.17,0.999
+clicks_late,Tương tác giảm (Tuần cuối so với đầu),7,10.0,4.0,22.0,0.127,1.0
+mean_score,Điểm TMA1 thấp,8,10.0,6.0,17.0,0.013,1.0
+first_assess_score,Điểm TMA1 thấp,9,9.5,7.0,18.0,0.01,1.0
+min_score,Điểm TMA1 thấp,10,11.0,6.0,17.024999999999977,0.005,1.0
+n_late,Chưa nộp TMA1,11,13.0,5.0,27.0,0.05,0.997
+n_missing,Chưa nộp TMA1,12,15.0,8.0,21.0,0.0,1.0
+first_assess_missing,Chưa nộp TMA1,13,15.0,8.0,21.0,0.0,1.0
+share_missing,Chưa nộp TMA1,14,15.0,9.0,21.0,0.0,1.0
+share_subpage,Cách dùng loại tài nguyên,15,16.0,4.0,30.0,0.076,0.966
+share_oucontent,Cách dùng loại tài nguyên,16,19.0,6.0,30.0,0.021,0.984
+num_of_prev_attempts,Học lại / khối lượng tín chỉ,17,19.0,5.0,30.024999999999977,0.029,0.957
+clicks_total,Ít tương tác VLE,18,20.0,6.0,31.0,0.017,0.965
+inactive_weeks,Nhiều tuần không hoạt động,19,20.0,5.0,31.0,0.054,0.909
+engagement_change,Tương tác giảm (Tuần cuối so với đầu),20,20.0,7.0,30.0,0.002,0.971
+clicks_w2,Ít tương tác VLE,21,21.0,5.0,31.0,0.039,0.915
+share_quiz,Cách dùng loại tài nguyên,22,21.0,6.0,31.0,0.008,0.953
+reg_days_before_start,Đăng ký muộn,23,23.0,7.0,31.0,0.009,0.909
+clicks_early,Tương tác giảm (Tuần cuối so với đầu),24,23.0,9.0,31.0,0.001,0.942
+share_homepage,Cách dùng loại tài nguyên,25,24.0,7.975000000000001,31.0,0.001,0.821
+share_resource,Cách dùng loại tài nguyên,26,25.0,12.0,31.0,0.001,0.877
+share_url,Cách dùng loại tài nguyên,27,26.0,12.0,32.0,0.001,0.799
+clicks_pre_start,Ít tương tác VLE,28,26.0,9.0,32.0,0.004,0.746
+clicks_w3,Ít tương tác VLE,29,26.0,10.0,31.024999999999977,0.005,0.712
+clicks_w1,Ít tương tác VLE,30,26.0,8.0,32.0,0.006,0.688
+n_assess_due,Chưa nộp TMA1,31,32.0,30.0,32.0,0.0,0.728
+share_forumng,Cách dùng loại tài nguyên,32,27.0,14.0,32.0,0.0,0.577

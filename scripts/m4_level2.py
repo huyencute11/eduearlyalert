@@ -1,4 +1,4 @@
-"""M4 Level 2 – prototype theo đúng quy trình đã cố định ở N03_Milestone4 (Mục 3.4, 4, 7).
+"""M4 Level 2 - prototype theo đúng quy trình đã cố định ở N03_Milestone4 (Mục 3.4, 4, 4.11).
 
 Không sửa kế hoạch Level 1 sau khi thấy kết quả. Thứ tự:
   1. Nạp prepared dataset của M3 (features.parquet, quần thể còn theo học tại cutoff).
@@ -6,19 +6,29 @@ Không sửa kế hoạch Level 1 sau khi thấy kết quả. Thứ tự:
   3. Candidate: gradient boosting (XGBoost) và logistic regression (L2), không cân bằng lớp bằng trọng số.
   4. Biến đổi fit trên tập huấn luyện; tinh chỉnh, dừng sớm, calibration, ngưỡng trên tập kiểm định.
   5. Quy tắc giữ/đổi (Mục 3.4) được áp dụng và GHI LOG trước khi chạm vào tập kiểm tra.
-  6. Tập kiểm tra dùng một lần cho báo cáo; không huấn luyện lại.
+  6. Tập kiểm tra chỉ dùng để báo cáo; không huấn luyện lại.
 
-Chạy (mốc Tuần 6):
-  python scripts/m4_level2.py --tag week6
-Độ nhạy mốc Tuần 4 (cam kết M1; cửa sổ sớm/muộn = Tuần 1–2 / 3–4):
-  EDU_ROOT=. python -m eduearlyalert.pipeline cohort features --config scripts/m4_level2_config_week4.yaml
-  python scripts/m4_level2.py --features data/sensitivity_week4/processed/features.parquet --tag week4 --core-only
+Tám thực nghiệm AQ7 = 4 bộ dữ liệu theo thời gian x 2 mốc dự báo (Tuần 6 = ngày 41, Tuần 4 = ngày 27).
+Bộ dữ liệu (huấn luyện, kiểm định, kiểm tra) và tag:
+  FFF 2013B, 2013J, 2014B           fff_13b_14b_week6   fff_13b_14b_week4
+  FFF 2013J, 2014B, 2014J           fff_13j_14j_week6   fff_13j_14j_week4
+  FFF 2013B + 2013J, 2014B, 2014J   week6               week4
+  EEE 2013J, 2014B, 2014J           eee                 eee_week4
+Cả tám thực nghiệm chạy chuỗi đầy đủ (AQ7, phân tích lỗi, AQ9, AQ10, AQ12, giải thích mô hình):
+  python scripts/m4_level2.py --tag week6                                   # prepared dataset của M3 (config.yaml)
+Bảy thực nghiệm còn lại dùng dataset dựng lại bằng cùng pipeline, mỗi tag một config scripts/m4_level2_config_<tag>.yaml
+(mốc Tuần 4: cửa sổ sớm/muộn = Tuần 1-2 / 3-4):
+  EDU_ROOT=. python -m eduearlyalert.pipeline cohort features --config scripts/m4_level2_config_<tag>.yaml
+  python scripts/m4_level2.py --features data/sensitivity_<tag>/processed/features.parquet --tag <tag> --config scripts/m4_level2_config_<tag>.yaml
+EEE ở mốc Tuần 4 chưa có bài đánh giá nào đến hạn (TMA1 hạn ngày 33): không có feature bài đánh giá, luật TMA1 không xác định.
+Tuỳ chọn --core-only chỉ chạy phần AQ7. Hình tổng hợp tám thực nghiệm: python scripts/m4_level2_figures.py
 Output: reports/m4_level2/<tag>/ (csv, json, png). Cần thêm gói xgboost (requirements.txt).
 """
 
 from __future__ import annotations
 
 import argparse
+import os
 import hashlib
 import json
 import platform
@@ -35,6 +45,7 @@ from sklearn.compose import ColumnTransformer
 from sklearn.impute import SimpleImputer
 from sklearn.linear_model import LogisticRegression
 from sklearn.metrics import average_precision_score, brier_score_loss, precision_recall_curve, roc_auc_score
+from sklearn.model_selection import StratifiedKFold, cross_val_predict
 from sklearn.pipeline import Pipeline, make_pipeline
 from sklearn.preprocessing import FunctionTransformer, StandardScaler
 
@@ -43,6 +54,7 @@ from eduearlyalert import cohort as cohort_mod  # noqa: E402
 from eduearlyalert import plotting  # noqa: E402
 from eduearlyalert.config import load_config  # noqa: E402
 from eduearlyalert.governance import audit  # noqa: E402
+from eduearlyalert.leakage import assert_no_leakage  # noqa: E402
 
 plt = plotting.plt
 
@@ -123,6 +135,15 @@ def boot_idx(n, rng):
     return rng.integers(0, n, n)
 
 
+def wilson(k, n, z=1.96):
+    """Khoảng tin cậy Wilson 95% cho một tỷ lệ k/n (M4 §4.5)."""
+    if n == 0:
+        return [np.nan, np.nan]
+    p = k / n; den = 1 + z * z / n
+    c = (p + z * z / (2 * n)) / den; h = z * np.sqrt(p * (1 - p) / n + z * z / (4 * n * n)) / den
+    return [float(c - h), float(c + h)]
+
+
 def ci(a):
     a = np.asarray(a, float)
     return [float(np.percentile(a, 2.5)), float(np.percentile(a, 97.5))]
@@ -195,9 +216,11 @@ def platt(p_va, y_va):
 
 
 # ----------------------------------------------------------------------------- experiment
-def run(features_path: Path, tag: str, core_only: bool):
+def run(features_path: Path, tag: str, core_only: bool, config_path: Path | None = None):
     global SEED, K, RECALL_MIN
-    cfg = load_config()
+    if config_path is not None:  # dataset dựng lại (mốc Tuần 4, môn EEE): đường dẫn tính từ gốc repo
+        os.environ.setdefault("EDU_ROOT", str(ROOT))
+    cfg = load_config(config_path)
     SEED = cfg.seed  # tham số lấy từ config.yaml; lưới tinh chỉnh là chi tiết riêng của thí nghiệm này
     K = cfg["advisor"]["k_per_advisor"] * cfg["advisor"]["n_advisors"]
     RECALL_MIN = cfg["acceptance"]["recall_min"]
@@ -211,12 +234,17 @@ def run(features_path: Path, tag: str, core_only: bool):
            "features_sha256": hashlib.sha256(features_path.read_bytes()).hexdigest()}
     meta = json.loads((features_path.parent / "feature_list.json").read_text())
     cols = meta["feature_columns"]
-    log["cutoff_day"] = meta["cutoff_day"]; log["n_features"] = len(cols)
+    cfg_chk = load_config(config_path); cfg_chk.raw["timeline"]["cutoff_day"] = meta["cutoff_day"]
+    assert_no_leakage(cfg_chk, cols, meta)  # cột cấm, thuộc tính nhạy cảm, ngày > mốc dự báo
+    log_leak = "assert_no_leakage: đạt"
+    log["cutoff_day"] = meta["cutoff_day"]; log["n_features"] = len(cols); log["leakage_check"] = log_leak
 
     f = pd.read_parquet(features_path)
     pop = f[f["in_prediction_population"].astype(bool)].reset_index(drop=True)
     parts = {s: pop[pop["split"] == s].reset_index(drop=True) for s in ("train", "valid", "test")}
     log["n"] = {s: int(len(d)) for s, d in parts.items()}
+    pres = {s: " + ".join(sorted(d["code_presentation"].unique())) for s, d in parts.items()}
+    log["module"] = cfg.module; log["presentations"] = pres
     log["n_pos"] = {s: int(d["y"].sum()) for s, d in parts.items()}
     X = {s: d[cols].astype(float) for s, d in parts.items()}
     y = {s: d["y"].to_numpy(int) for s, d in parts.items()}
@@ -225,8 +253,10 @@ def run(features_path: Path, tag: str, core_only: bool):
 
     # ---- baselines
     prior = float(y["train"].mean())
-    rule = {s: ((parts[s]["first_assess_missing"] == 1) | (parts[s]["first_assess_score"] < 40)).to_numpy(float)
-            for s in parts}
+    has_tma = "first_assess_missing" in parts["train"].columns  # EEE ở ngày 27: chưa có bài đánh giá nào đến hạn
+    rule = {s: (((parts[s]["first_assess_missing"] == 1) | (parts[s]["first_assess_score"] < 40)).to_numpy(float) if has_tma
+                else np.zeros(len(parts[s]))) for s in parts}
+    log["rule_defined"] = bool(has_tma)
 
     # ---- candidates (fit trên huấn luyện, chọn trên kiểm định)
     lr, lr_best = fit_lr(X["train"], y["train"], X["valid"], y["valid"], cols, binary, log)
@@ -260,7 +290,7 @@ def run(features_path: Path, tag: str, core_only: bool):
     log["threshold_valid"] = thr
     log["mean_pred"] = {n: {sp: float(score[n][sp].mean()) for sp in parts} for n in ("gb", "lr")}
 
-    # ---- so sánh trên kiểm định + quy tắc giữ/đổi (Mục 3.4) – TRƯỚC khi chạm tập kiểm tra
+    # ---- so sánh trên kiểm định + quy tắc giữ/đổi (Mục 3.4) - TRƯỚC khi chạm tập kiểm tra
     yv = y["valid"]
     diff, auc_d = [], []
     for _ in range(N_BOOT):
@@ -274,7 +304,7 @@ def run(features_path: Path, tag: str, core_only: bool):
                        "ci95": d_ci, "rule": "giữ gradient boosting chỉ khi khoảng tin cậy của chênh lệch nằm trên 0",
                        "chosen": decision, "decided_at": time.strftime("%Y-%m-%d %H:%M:%S")}
     chosen = "gb" if decision == "gradient boosting" else "lr"
-    # bằng chứng bổ trợ cho quyết định: chênh lệch huấn luyện – kiểm định (overfitting) và độ phức tạp
+    # bằng chứng bổ trợ cho quyết định: chênh lệch huấn luyện - kiểm định (overfitting) và độ phức tạp
     log["train_vs_valid"] = {n: {k: (prauc(y[k], score[n][k]) if k != "gap" else None) for k in ("train", "valid")}
                              for n in ("gb", "lr")}
     for n in ("gb", "lr"):
@@ -332,6 +362,19 @@ def run(features_path: Path, tag: str, core_only: bool):
             cis.append({"split": s, "model": n, **{f"{k}_ci": ci(v) for k, v in acc.items()}})
     pd.DataFrame(cis).to_json(out / "aq7_metric_ci.json", orient="records", force_ascii=False, indent=2)
 
+    # ---- điểm của đường precision-recall và calibration trên tập kiểm tra, cho hình tổng hợp tám thực nghiệm
+    # (scripts/m4_level2_figures.py). Chỉ là toạ độ đường cong, không có định danh sinh viên; không dùng số ngẫu nhiên.
+    pr_rows, cal_rows = [], []
+    for n in ("gb", "lr"):
+        pr_, rc_, _ = precision_recall_curve(y["test"], score[n]["test"])
+        keep = np.unique(np.linspace(0, len(pr_) - 1, min(len(pr_), 400)).round().astype(int))
+        pr_rows += [{"model": n, "recall": float(rc_[i]), "precision": float(pr_[i])} for i in keep]
+        fy, fx = calibration_curve(y["test"], score[n]["test"], n_bins=10, strategy="quantile")
+        cal_rows += [{"model": n, "bin": j + 1, "mean_pred": float(a), "observed": float(b)}
+                     for j, (a, b) in enumerate(zip(fx, fy))]
+    pd.DataFrame(pr_rows).to_csv(out / "aq7_pr_curve_test.csv", index=False)
+    pd.DataFrame(cal_rows).to_csv(out / "aq7_calibration_test.csv", index=False)
+
     log["finished_core"] = time.strftime("%Y-%m-%d %H:%M:%S")
     if core_only:
         (out / "experiment_log.json").write_text(json.dumps(log, ensure_ascii=False, indent=2))
@@ -347,7 +390,7 @@ def run(features_path: Path, tag: str, core_only: bool):
         ax[j].scatter([rr["recall"]], [rr["precision"]], color="k", zorder=5, label="Luật TMA1")
         ax[j].axhline(y[s].mean(), ls="--", color="grey", lw=1, label="Tỷ lệ nền")
         ax[j].axvline(RECALL_MIN, ls=":", color="grey", lw=1)
-        ax[j].set_title(f"AQ7 · Precision–Recall · tập {'kiểm định 2014B' if s == 'valid' else 'kiểm tra 2014J'}")
+        ax[j].set_title(f"AQ7 · Precision-Recall · tập {'kiểm định' if s == 'valid' else 'kiểm tra'} {pres[s]}")
         ax[j].set_xlabel("Recall"); ax[j].set_ylabel("Precision"); ax[j].legend(fontsize=7, loc="lower left")
     plotting.save(fig, out / "aq7_pr_curves.png")
 
@@ -357,19 +400,20 @@ def run(features_path: Path, tag: str, core_only: bool):
             fy, fx = calibration_curve(y[s], score[n][s], n_bins=10, strategy="quantile")
             ax[j].plot(fx, fy, marker="o", label=lab)
         ax[j].plot([0, 1], [0, 1], ls="--", color="grey", lw=1)
-        ax[j].set_title(f"AQ7 · Calibration · tập {'kiểm định 2014B' if s == 'valid' else 'kiểm tra 2014J'}")
+        ax[j].set_title(f"AQ7 · Calibration · tập {'kiểm định' if s == 'valid' else 'kiểm tra'} {pres[s]}")
         ax[j].set_xlabel("Xác suất dự báo"); ax[j].set_ylabel("Tỷ lệ y = 1 thực tế"); ax[j].legend(fontsize=8)
     plotting.save(fig, out / "aq7_calibration.png")
 
     sc_c = score[chosen]
     # ---- AQ7 error analysis trên tập kiểm tra (mô hình được chọn)
     te = parts["test"].copy(); te["score"] = sc_c["test"]; te["alert"] = te["score"] >= thr[chosen]
-    coh = pd.read_parquet(ROOT / "data/interim/cohort.parquet")[["pid", "code_presentation", "date_unregistration"]]
+    coh = pd.read_parquet(cfg.path("interim_dir") / "cohort.parquet")[["pid", "code_presentation", "date_unregistration"]]
     te = te.merge(coh, on=["pid", "code_presentation"], how="left")
     te["group"] = np.select([(te.y == 1) & te.alert, (te.y == 1) & ~te.alert, (te.y == 0) & te.alert],
                             ["TP", "FN", "FP"], "TN")
-    prof_cols = ["clicks_total", "active_days_total", "inactive_weeks", "engagement_change",
-                 "first_assess_missing", "first_assess_score", "studied_credits", "num_of_prev_attempts"]
+    prof_cols = [c for c in ["clicks_total", "active_days_total", "inactive_weeks", "engagement_change",
+                             "first_assess_missing", "first_assess_score", "studied_credits", "num_of_prev_attempts"]
+                 if c in te.columns]
     prof = te.groupby("group")[prof_cols].median().T
     prof.loc["n"] = te.groupby("group").size()
     prof.to_csv(out / "aq7_error_profiles_test.csv")
@@ -394,9 +438,12 @@ def run(features_path: Path, tag: str, core_only: bool):
             for lev, dd in g:
                 if len(dd) < 10:
                     continue
-                pos = dd[dd.y == 1]
+                pos = dd[dd.y == 1]; neg = dd[dd.y == 0]
+                wl = wilson(int(pos.alert.sum()), len(pos))
                 fair_rows.append({"split": s, "attribute": att, "group": str(lev), "n": len(dd), "n_pos": len(pos),
                                   "recall": pos.alert.mean() if len(pos) else np.nan,
+                                  "recall_ci_low": wl[0], "recall_ci_high": wl[1],
+                                  "n_neg": len(neg), "fpr": neg.alert.mean() if len(neg) else np.nan,
                                   "recall_rule": pos.rule.mean() if len(pos) else np.nan,
                                   "alert_rate": dd.alert.mean(),
                                   "precision": dd.loc[dd.alert, "y"].mean() if dd.alert.any() else np.nan})
@@ -417,7 +464,58 @@ def run(features_path: Path, tag: str, core_only: bool):
                              "ci_low": c[0], "ci_high": c[1], "level1_flag": gap > 0.10,
                              "level2_confirmed": gap > 0.10 and c[0] > 0})
     pd.DataFrame(fair_rows).to_csv(out / "aq9_groups.csv", index=False)
+
+    # ---- AQ9: kiểm tra feature proxy (M4 §4.5) trên tập huấn luyện - feature dự đoán được thuộc tính nhạy cảm đến đâu
+    dtr = X["train"].copy()
+    st = parts["train"][["pid", "code_presentation"]].merge(sens, on=["pid", "code_presentation"], how="left")
+    targets = {
+        "gender = F": (st["gender"] == "F"),
+        "disability = Y": (st["disability"] == "Y"),
+        "age_band ≥ 35": (st["age_band"] != "0-35"),
+        "imd_band ≤ 30% (khu vực thiếu thốn nhất)": st["imd_band"].isin(["0-10%", "10-20", "20-30%"]).where(st["imd_band"].notna()),
+        "highest_education dưới A Level": st["highest_education"].isin(["No Formal quals", "Lower Than A Level"]),
+    }
+    prox = []
+    skf = StratifiedKFold(5, shuffle=True, random_state=SEED)
+    for name, t in targets.items():
+        ok = t.notna().to_numpy(); yt = t[ok].astype(int).to_numpy(); Xt_ = dtr[ok]
+        pr = cross_val_predict(lr_pipeline(cols, binary, 1.0), Xt_, yt, cv=skf, method="predict_proba")[:, 1]
+        rho = Xt_.apply(lambda c: pd.Series(c).corr(pd.Series(yt, index=c.index), method="spearman")).dropna()
+        top = rho.reindex(rho.abs().sort_values(ascending=False).index)[:3]
+        prox.append({"attribute": name, "n": int(ok.sum()), "share": float(yt.mean()),
+                     "auc_cv": float(roc_auc_score(yt, pr)),
+                     "top_features": "; ".join(f"{k} ({v:+.2f})" for k, v in top.items())})
+    pd.DataFrame(prox).to_csv(out / "aq9_proxy_check.csv", index=False)
     pd.DataFrame(gap_rows).to_csv(out / "aq9_gaps.csv", index=False)
+
+    # ---- AQ9 khi so sánh candidate (M4 §3.4, §4.5): chênh lệch Recall theo nhóm trên tập kiểm định của candidate
+    # KHÔNG được chọn (candidate được chọn đã có ở aq9_gaps.csv). Cùng quy tắc hai mức, cùng cách lấy mẫu lại theo
+    # sinh viên; dùng bộ sinh riêng để không làm đổi các kết quả khác.
+    other = "gb" if chosen == "lr" else "lr"
+    rng9 = np.random.default_rng(SEED + 9)
+    dv = parts["valid"][["pid", "code_presentation", "y"]].merge(sens, on=["pid", "code_presentation"], how="left")
+    yv_all = dv["y"].to_numpy() == 1
+    alert_o = score[other]["valid"] >= thr[other]
+    gap_o = []
+    for att in ["gender", "age_band", "region", "disability", "imd_band", "highest_education"]:
+        lab = np.array([str(v) for v in dv[att].fillna("NA")], dtype=object)
+        levs = [v for v in np.unique(lab) if v != "NA" and ((lab == v) & yv_all).sum() >= 30]
+        if len(levs) < 2:
+            continue
+        code = np.array([levs.index(v) if v in levs else -1 for v in lab])
+        rec = np.array([alert_o[(code == j) & yv_all].mean() for j in range(len(levs))])
+        hi, lo = int(rec.argmax()), int(rec.argmin())
+        bs_o = []
+        for _ in range(N_BOOT):
+            i = rng9.integers(0, len(dv), len(dv)); pb = yv_all[i]; cb = code[i][pb]; hb = alert_o[i][pb]
+            if (cb == hi).any() and (cb == lo).any():
+                bs_o.append(hb[cb == hi].mean() - hb[cb == lo].mean())
+        c_ = ci(bs_o); gp = float(rec[hi] - rec[lo])
+        gap_o.append({"split": "valid", "model": other, "attribute": att, "highest": levs[hi], "lowest": levs[lo],
+                      "recall_highest": float(rec[hi]), "recall_lowest": float(rec[lo]), "gap": gp,
+                      "ci_low": c_[0], "ci_high": c_[1], "level1_flag": gp > 0.10,
+                      "level2_confirmed": gp > 0.10 and c_[0] > 0})
+    pd.DataFrame(gap_o).to_csv(out / "aq9_gaps_valid_other_candidate.csv", index=False)
     log["roc_auc_by_run"] = {s: float(roc_auc_score(y[s], sc_c[s])) for s in ("valid", "test")}
 
     # ---- AQ10: độ bao phủ theo K, so với ngẫu nhiên và luật
@@ -448,8 +546,11 @@ def run(features_path: Path, tag: str, core_only: bool):
         for lev, dd in d.groupby(att, dropna=False):
             if len(dd) < 10:
                 continue
+            npos = int(dd.y.sum()); npos_top = int((dd.top & (dd.y == 1)).sum())
+            # độ bao phủ@K theo nhóm (M4 §4.6): SV y = 1 của nhóm nằm trong K sinh viên đứng đầu ÷ SV y = 1 của nhóm
             share.append({"attribute": att, "group": str(lev), "share_top70": dd.top.sum() / K,
-                          "share_positives": dd.y.sum() / d.y.sum()})
+                          "share_positives": dd.y.sum() / d.y.sum(), "n_pos": npos, "n_pos_top70": npos_top,
+                          "coverage_top70": npos_top / npos if npos else np.nan})
     pd.DataFrame(share).to_csv(out / "aq10_group_share_test.csv", index=False)
     log["aq10"] = aq10
 
@@ -459,7 +560,7 @@ def run(features_path: Path, tag: str, core_only: bool):
     ax.plot(cv.K, cv.rule, marker="s", label="Luật TMA1")
     ax.plot(cv.K, cv.random, ls="--", label="Chọn ngẫu nhiên")
     ax.axvline(K, color="grey", ls=":", lw=1)
-    ax.set_title("AQ10 · Độ bao phủ theo K · tập kiểm tra 2014J"); ax.set_xlabel("K (số sinh viên được liên hệ)")
+    ax.set_title(f"AQ10 · Độ bao phủ theo K · tập kiểm tra {pres['test']}"); ax.set_xlabel("K (số sinh viên được liên hệ)")
     ax.set_ylabel("Độ bao phủ (phần SV y = 1 trong danh sách)"); ax.legend(fontsize=8)
     plotting.save(fig, out / "aq10_coverage.png")
 
@@ -474,6 +575,59 @@ def run(features_path: Path, tag: str, core_only: bool):
             a = at_threshold(yy, sc, t)
             sc_rows.append({"split": s, "scenario": name, **a, "weeks_of_capacity": a["alerts"] / K})
     pd.DataFrame(sc_rows).to_csv(out / "aq12_scenarios.csv", index=False)
+
+    # AQ12: Recall theo nhóm ở mỗi mức cảnh báo (tập kiểm tra; nhóm có ≥ 30 SV y = 1)
+    yy = y["test"]; sc = sc_c["test"]; n = len(yy)
+    dg = parts["test"][["pid", "code_presentation", "y"]].merge(sens, on=["pid", "code_presentation"], how="left")
+    cut = {"Top 10%": np.sort(sc)[::-1][int(0.10 * n) - 1], "Top 20%": np.sort(sc)[::-1][int(0.20 * n) - 1],
+           "Top 30%": np.sort(sc)[::-1][int(0.30 * n) - 1], "Ngưỡng chọn": thr[chosen]}
+    grows = []
+    for att in ["gender", "age_band", "disability", "imd_band", "highest_education", "region"]:
+        for lev, dd in dg.groupby(att, dropna=False):
+            idx = dd.index[dd.y == 1]
+            if len(idx) < 30:
+                continue
+            row = {"attribute": att, "group": str(lev), "n_pos": len(idx)}
+            for name, t in cut.items():
+                row[name] = float((sc[idx] >= t).mean())
+            grows.append(row)
+    pd.DataFrame(grows).to_csv(out / "aq12_group_recall_test.csv", index=False)
+    # quy tắc hai mức (4.5) cho từng mức cảnh báo: chênh lệch nhóm cao nhất - thấp nhất + khoảng tin cậy bootstrap
+    rng12 = np.random.default_rng(SEED + 12)  # bộ sinh riêng để không làm đổi các kết quả khác
+    pidx = np.where(dg["y"].to_numpy() == 1)[0]
+    gap12 = []
+    for att in ["gender", "age_band", "disability", "imd_band", "highest_education", "region"]:
+        lab = np.array([str(v) for v in dg[att].fillna("NA")], dtype=object)[pidx]
+        levs = [v for v in np.unique(lab) if (lab == v).sum() >= 30]
+        if len(levs) < 2:
+            continue
+        code = np.array([levs.index(v) if v in levs else -1 for v in lab])
+        for name, t in cut.items():
+            hit = (sc[pidx] >= t).astype(float)
+            rec = np.array([hit[code == j].mean() for j in range(len(levs))])
+            hi, lo = int(rec.argmax()), int(rec.argmin())
+            bs = []
+            for _ in range(N_BOOT):
+                b_ = rng12.integers(0, len(pidx), len(pidx)); cb, hb = code[b_], hit[b_]
+                if (cb == hi).any() and (cb == lo).any():
+                    bs.append(hb[cb == hi].mean() - hb[cb == lo].mean())
+            c_ = ci(bs); gp = float(rec[hi] - rec[lo])
+            gap12.append({"attribute": att, "scenario": name, "highest": levs[hi], "lowest": levs[lo], "gap": gp,
+                          "ci_low": c_[0], "ci_high": c_[1], "level1_flag": gp > 0.10,
+                          "level2_confirmed": gp > 0.10 and c_[0] > 0})
+    pd.DataFrame(gap12).to_csv(out / "aq12_group_gaps_test.csv", index=False)
+
+    # AQ10: ai cần hỗ trợ nhưng nằm ngoài K sinh viên đứng đầu (tập kiểm tra)
+    o70 = np.lexsort((np.random.default_rng(SEED).random(n), -sc))[:K]
+    intop = np.zeros(n, bool); intop[o70] = True
+    pos_t = parts["test"]["y"].to_numpy() == 1
+    tt = parts["test"]
+    log["aq10_outside_k"] = {
+        g: {"n": int((pos_t & m).sum()),
+            "tma1_missing_share": float(tt.loc[pos_t & m, "first_assess_missing"].mean()) if has_tma else None,
+            "median_clicks_total": float(tt.loc[pos_t & m, "clicks_total"].median()),
+            "median_tma1_score": float(tt.loc[pos_t & m, "first_assess_score"].median()) if has_tma else None}
+        for g, m in (("in_top70", intop), ("outside_top70", ~intop))}
 
     # ---- Explainability
     Xv = X["valid"]
@@ -505,8 +659,22 @@ def run(features_path: Path, tag: str, core_only: bool):
                   "odds_ratio": np.exp(coef), "ci_low": np.percentile(bs, 2.5, axis=0),
                   "ci_high": np.percentile(bs, 97.5, axis=0)}).sort_values("coef", key=np.abs, ascending=False) \
         .to_csv(out / "explain_lr_coefficients.csv", index=False)
+    # độ ổn định của thứ tự feature qua bootstrap (M4 §3.5, §4.4) - dùng lại 1.000 mẫu ở trên, không sinh thêm số
+    # ngẫu nhiên: hạng theo |hệ số| ở mỗi mẫu so với hạng trên toàn bộ tập huấn luyện
+    absf = np.abs(coef); ranks = (-np.abs(bs)).argsort(axis=1).argsort(axis=1) + 1
+    top5 = set(np.argsort(-absf)[:5])
+    rho = [float(pd.Series(absf).corr(pd.Series(np.abs(b)), method="spearman")) for b in bs]
+    pd.DataFrame({"feature": feat_names, "group": [group_of(c) for c in feat_names],
+                  "rank_full": (-absf).argsort().argsort() + 1, "rank_median": np.median(ranks, axis=0),
+                  "rank_p2_5": np.percentile(ranks, 2.5, axis=0), "rank_p97_5": np.percentile(ranks, 97.5, axis=0),
+                  "top5_freq": (ranks <= 5).mean(axis=0),
+                  "same_sign_freq": (np.sign(bs) == np.sign(coef)).mean(axis=0)}).sort_values("rank_full") \
+        .to_csv(out / "explain_lr_rank_stability.csv", index=False)
+    log["lr_rank_stability"] = {"spearman_median": float(np.median(rho)), "spearman_ci": ci(rho),
+                                "top5_overlap_mean": float(np.mean([len(top5 & set(np.argsort(-np.abs(b))[:5]))
+                                                                    for b in bs]))}
 
-    # reason codes cho danh sách 70 SV đứng đầu (tập kiểm tra) – mô hình được chọn
+    # reason codes cho danh sách 70 SV đứng đầu (tập kiểm tra) - mô hình được chọn
     Xt = X["test"]
     if chosen == "gb":
         cb = gb.contribs(Xt); contrib = pd.DataFrame(cb[:, :-1], columns=cols); bias = cb[:, -1]
@@ -516,12 +684,13 @@ def run(features_path: Path, tag: str, core_only: bool):
         Z = lr.named_steps["pre"].transform(Xt); Zm = lr.named_steps["pre"].transform(X["train"]).mean(axis=0)
         contrib = pd.DataFrame((Z - Zm) * coef, columns=feat_names)
     gsum = pd.DataFrame({g: contrib[[c for c in cs if c in contrib.columns]].sum(axis=1) for g, cs in groups.items()})
-    # v2: gán theo giá trị thật – với SV chưa nộp TMA1, phần "điểm" (điểm điền thay, điểm có trọng số = 0) và
+    # v2: gán theo giá trị thật - với SV chưa nộp TMA1, phần "điểm" (điểm điền thay, điểm có trọng số = 0) và
     # "nộp sát hạn" thực chất là do chưa nộp; với SV 0 ngày hoạt động, tỷ trọng loại tài nguyên = 0 là do không truy cập
     g2 = gsum.copy()
-    miss = (Xt["first_assess_missing"] == 1).to_numpy()
+    miss = (Xt["first_assess_missing"] == 1).to_numpy() if has_tma else np.zeros(len(Xt), bool)
     for g in ("Điểm TMA1 thấp", "Nộp bài sát hạn"):
-        g2.loc[miss, "Chưa nộp TMA1"] += g2.loc[miss, g]; g2.loc[miss, g] = 0
+        if has_tma and g in g2.columns:
+            g2.loc[miss, "Chưa nộp TMA1"] += g2.loc[miss, g]; g2.loc[miss, g] = 0
     idle = (Xt["active_days_total"].fillna(0) == 0).to_numpy()
     g2.loc[idle, "Ít tương tác VLE"] += g2.loc[idle, "Cách dùng loại tài nguyên"]; g2.loc[idle, "Cách dùng loại tài nguyên"] = 0
     order = np.lexsort((np.random.default_rng(SEED).random(len(sc_c["test"])), -sc_c["test"]))[:K]
@@ -531,14 +700,14 @@ def run(features_path: Path, tag: str, core_only: bool):
         for i in order:
             r = G.iloc[i]; r = r[r > 0].sort_values(ascending=False).head(3)
             reasons.append(list(r.index))
-        first = pd.Series([r[0] if r else "–" for r in reasons]).value_counts()
+        first = pd.Series([r[0] if r else "-" for r in reasons]).value_counts()
         anyr = pd.Series([g for r in reasons for g in r]).value_counts()
         tabs[ver] = pd.DataFrame({f"{ver}_top_reason": first, f"{ver}_in_top3": anyr})
         ct = pd.crosstab(pd.Series([r[0] for r in reasons], name=f"{ver}_top_reason"),
                          pd.Series(miss[order], name="chua_nop_TMA1"))
         ct.to_csv(out / f"reason_codes_{ver}_by_tma1_missing.csv")
     pd.concat(tabs.values(), axis=1).fillna(0).astype(int).to_csv(out / "reason_codes_top70_test.csv")
-    log["top70_test"] = {"tma1_missing_share": float(miss[order].mean()), "idle_share": float(idle[order].mean()),
+    log["top70_test"] = {"tma1_missing_share": float(miss[order].mean()) if has_tma else None, "idle_share": float(idle[order].mean()),
                          "median_clicks_total": float(Xt["clicks_total"].iloc[order].median())}
 
     log["finished"] = time.strftime("%Y-%m-%d %H:%M:%S")
@@ -551,5 +720,6 @@ if __name__ == "__main__":
     ap.add_argument("--features", default=str(ROOT / "data/processed/features.parquet"))
     ap.add_argument("--tag", default="week6")
     ap.add_argument("--core-only", action="store_true")
+    ap.add_argument("--config", default=None, help="config của dataset dựng lại (mặc định: config.yaml)")
     a = ap.parse_args()
-    run(Path(a.features).resolve(), a.tag, a.core_only)
+    run(Path(a.features).resolve(), a.tag, a.core_only, Path(a.config).resolve() if a.config else None)

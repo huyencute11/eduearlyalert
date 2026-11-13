@@ -1,0 +1,35 @@
+feature,group,rank_full,rank_median,rank_p2_5,rank_p97_5,top5_freq,same_sign_freq
+clicks_w6,Ít tương tác VLE,1,2.0,1.0,8.0,0.886,1.0
+weighted_score_so_far,Điểm TMA1 thấp,2,3.0,1.0,8.0,0.828,1.0
+active_days_total,Ít tương tác VLE,3,5.0,1.0,13.0,0.566,1.0
+share_oucontent,Cách dùng loại tài nguyên,4,5.0,1.0,14.024999999999977,0.629,0.999
+share_quiz,Cách dùng loại tài nguyên,5,5.0,1.0,15.0,0.529,0.998
+n_on_time,Chưa nộp TMA1,6,7.0,2.0,16.0,0.38,0.999
+share_forumng,Cách dùng loại tài nguyên,7,7.0,2.0,25.0,0.377,0.998
+clicks_total,Ít tương tác VLE,8,8.0,1.0,33.0,0.369,0.856
+n_late,Chưa nộp TMA1,9,9.0,2.0,31.0,0.182,0.983
+clicks_w5,Ít tương tác VLE,10,10.0,4.0,29.0,0.085,0.993
+mean_days_early,Nộp bài sát hạn,11,11.0,4.0,21.024999999999977,0.071,0.999
+share_homepage,Cách dùng loại tài nguyên,12,13.0,6.0,33.0,0.013,0.952
+share_resource,Cách dùng loại tài nguyên,13,15.0,9.0,29.0,0.0,0.995
+studied_credits,Học lại / khối lượng tín chỉ,14,17.0,10.0,32.0,0.0,0.994
+clicks_pre_start,Ít tương tác VLE,15,20.0,10.0,34.0,0.0,0.959
+mean_score,Điểm TMA1 thấp,16,21.0,15.0,28.024999999999977,0.0,1.0
+min_score,Điểm TMA1 thấp,17,22.0,15.0,29.0,0.0,1.0
+first_assess_score,Điểm TMA1 thấp,18,22.0,14.0,28.0,0.0,1.0
+share_url,Cách dùng loại tài nguyên,19,22.0,11.0,34.0,0.0,0.953
+clicks_w1,Ít tương tác VLE,20,22.0,8.0,34.0,0.004,0.865
+clicks_early,Tương tác giảm (Tuần cuối so với đầu),21,17.0,4.0,34.0,0.046,0.705
+share_missing,Chưa nộp TMA1,22,22.0,14.0,32.0,0.0,0.952
+first_assess_missing,Chưa nộp TMA1,23,21.0,13.0,31.0,0.0,0.952
+n_missing,Chưa nộp TMA1,24,22.0,13.0,31.0,0.0,0.952
+clicks_late,Tương tác giảm (Tuần cuối so với đầu),25,21.0,7.0,34.0,0.019,0.768
+num_of_prev_attempts,Học lại / khối lượng tín chỉ,26,25.0,12.0,34.0,0.0,0.926
+reg_days_before_start,Đăng ký muộn,27,27.0,13.0,34.0,0.0,0.918
+clicks_w2,Ít tương tác VLE,28,26.0,10.0,34.0,0.005,0.76
+inactive_weeks,Nhiều tuần không hoạt động,29,25.0,9.0,34.0,0.006,0.587
+engagement_change,Tương tác giảm (Tuần cuối so với đầu),30,28.0,11.975000000000001,34.0,0.0,0.663
+clicks_w4,Ít tương tác VLE,31,27.5,10.0,34.0,0.002,0.569
+n_assess_due,Chưa nộp TMA1,32,32.0,23.0,34.0,0.0,0.677
+clicks_w3,Ít tương tác VLE,33,27.0,10.0,34.0,0.001,0.561
+share_subpage,Cách dùng loại tài nguyên,34,28.0,11.0,34.0,0.002,0.565

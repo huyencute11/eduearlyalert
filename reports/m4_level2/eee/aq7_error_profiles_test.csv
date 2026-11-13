@@ -1,0 +1,10 @@
+,FN,FP,TN,TP
+clicks_total,511.0,284.0,529.0,192.0
+active_days_total,26.0,15.0,27.0,10.0
+inactive_weeks,0.0,1.0,0.0,2.0
+engagement_change,-0.4859709932117662,-0.49872260159474724,-0.5310913212255741,-0.3760997186871471
+first_assess_missing,0.0,0.0,0.0,0.0
+first_assess_score,92.0,83.0,95.0,76.0
+studied_credits,60.0,60.0,60.0,60.0
+num_of_prev_attempts,0.0,0.0,0.0,0.0
+n,54.0,247.0,437.0,264.0

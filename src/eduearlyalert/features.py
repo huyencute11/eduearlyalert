@@ -196,8 +196,8 @@ def build(cfg: Config) -> pd.DataFrame:
     df["reg_days_before_start"] = -df["date_registration"]
 
     zero_fill = [c for c in df.columns if c.startswith(("clicks_", "share_"))] + [
-        "active_days_total", "n_on_time", "n_late", "n_missing",
-    ]
+        c for c in ("active_days_total", "n_on_time", "n_late", "n_missing") if c in df.columns
+    ]  # không có bài đánh giá nào hạn <= cutoff (ví dụ EEE ở ngày 27) thì không có cột bài đánh giá
     df[zero_fill] = df[zero_fill].fillna(0)
     df["inactive_weeks"] = df["inactive_weeks"].fillna((cfg.cutoff_day + 1) // cfg["timeline"]["week_length"])
     df["engagement_change"] = df["engagement_change"].fillna(0.0)

@@ -1,0 +1,35 @@
+feature,group,rank_full,rank_median,rank_p2_5,rank_p97_5,top5_freq,same_sign_freq
+clicks_w6,Ít tương tác VLE,1,2.0,1.0,7.0,0.924,1.0
+clicks_total,Ít tương tác VLE,2,3.0,1.0,33.0,0.631,0.888
+n_on_time,Chưa nộp TMA1,3,6.0,1.0,16.0,0.492,0.999
+clicks_w5,Ít tương tác VLE,4,6.0,2.0,20.0,0.412,0.998
+share_forumng,Cách dùng loại tài nguyên,5,6.0,1.0,30.0,0.459,0.982
+share_quiz,Cách dùng loại tài nguyên,6,6.0,2.0,30.024999999999977,0.434,0.975
+weighted_score_so_far,Điểm TMA1 thấp,7,6.0,1.9750000000000014,15.0,0.426,1.0
+share_oucontent,Cách dùng loại tài nguyên,8,7.0,2.0,31.0,0.347,0.97
+n_late,Chưa nộp TMA1,9,9.0,2.0,32.02499999999998,0.262,0.97
+active_days_total,Ít tương tác VLE,10,10.0,2.0,33.0,0.229,0.947
+mean_days_early,Nộp bài sát hạn,11,12.0,4.0,30.0,0.093,0.994
+share_resource,Cách dùng loại tài nguyên,12,12.0,6.0,25.0,0.02,0.997
+share_homepage,Cách dùng loại tài nguyên,13,15.0,7.0,33.0,0.009,0.897
+clicks_w1,Ít tương tác VLE,14,16.0,4.0,33.0,0.053,0.913
+num_of_prev_attempts,Học lại / khối lượng tín chỉ,15,18.0,9.0,33.0,0.0,0.965
+clicks_w4,Ít tương tác VLE,16,19.0,7.0,34.0,0.015,0.823
+studied_credits,Học lại / khối lượng tín chỉ,17,19.0,9.0,33.0,0.0,0.974
+clicks_w3,Ít tương tác VLE,18,19.0,6.0,34.0,0.024,0.81
+share_url,Cách dùng loại tài nguyên,19,23.0,12.0,34.0,0.0,0.919
+n_missing,Chưa nộp TMA1,20,22.0,14.0,31.0,0.0,1.0
+first_assess_missing,Chưa nộp TMA1,21,23.0,15.0,31.0,0.0,1.0
+share_missing,Chưa nộp TMA1,22,22.0,14.0,30.0,0.0,1.0
+share_subpage,Cách dùng loại tài nguyên,23,22.0,5.0,34.0,0.026,0.783
+first_assess_score,Điểm TMA1 thấp,24,24.0,17.0,29.0,0.0,0.999
+mean_score,Điểm TMA1 thấp,25,23.0,15.0,31.0,0.0,0.999
+min_score,Điểm TMA1 thấp,26,24.0,16.0,31.0,0.0,0.999
+clicks_early,Tương tác giảm (Tuần cuối so với đầu),27,16.0,2.0,34.0,0.103,0.594
+reg_days_before_start,Đăng ký muộn,28,28.0,13.0,34.0,0.0,0.83
+inactive_weeks,Nhiều tuần không hoạt động,29,21.5,7.0,34.0,0.011,0.599
+clicks_w2,Ít tương tác VLE,30,25.0,8.975000000000001,34.0,0.006,0.641
+clicks_late,Tương tác giảm (Tuần cuối so với đầu),31,21.0,6.0,34.0,0.023,0.548
+clicks_pre_start,Ít tương tác VLE,32,29.0,13.0,34.0,0.0,0.626
+engagement_change,Tương tác giảm (Tuần cuối so với đầu),33,26.5,11.0,34.0,0.001,0.579
+n_assess_due,Chưa nộp TMA1,34,31.0,17.0,34.0,0.0,0.574

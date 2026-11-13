@@ -1,0 +1,10 @@
+{
+  "prauc_gb_minus_lr_valid": 0.009781125043367367,
+  "ci95": [
+    -0.0038628682759737354,
+    0.02339356092491981
+  ],
+  "rule": "giữ gradient boosting chỉ khi khoảng tin cậy của chênh lệch nằm trên 0",
+  "chosen": "logistic regression",
+  "decided_at": "2026-11-13 16:34:50"
+}

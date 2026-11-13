@@ -1,0 +1,6 @@
+attribute,n,share,auc_cv,top_features
+gender = F,1433,0.19190509420795535,0.5968974721306328,clicks_late (+0.11); clicks_w4 (+0.11); clicks_w5 (+0.10)
+disability = Y,1433,0.0837404047452896,0.5128014724549378,n_on_time (-0.07); share_subpage (-0.05); weighted_score_so_far (-0.05)
+age_band ≥ 35,1433,0.2916957431960921,0.6635491550192094,clicks_total (+0.19); clicks_early (+0.17); clicks_late (+0.16)
+imd_band ≤ 30% (khu vực thiếu thốn nhất),1343,0.31347728965003724,0.5281583462574905,weighted_score_so_far (-0.12); n_missing (+0.10); share_missing (+0.10)
+highest_education dưới A Level,1433,0.4110258199581298,0.5419358861915529,weighted_score_so_far (-0.14); min_score (-0.11); mean_score (-0.11)

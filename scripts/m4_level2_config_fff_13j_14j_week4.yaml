@@ -1,0 +1,66 @@
+project:
+  name: EduEarlyAlert
+  seed: 42
+paths:
+  raw_dir: data/raw
+  db_path: data/interim/oulad.duckdb
+  interim_dir: data/sensitivity_fff_13j_14j_week4/interim
+  processed_dir: data/sensitivity_fff_13j_14j_week4/processed
+  reports_dir: data/sensitivity_fff_13j_14j_week4/reports
+  figures_dir: data/sensitivity_fff_13j_14j_week4/reports/figures
+  kg_dir: kg
+  audit_log: data/sensitivity_fff_13j_14j_week4/audit_log.jsonl
+  dq_notes: docs/data_quality_notes.md
+  eda_insights: docs/eda_insights.md
+scope:
+  module: FFF
+  presentations:
+    train:
+    - 2013J
+    valid:
+    - 2014B
+    test:
+    - 2014J
+timeline:
+  cutoff_day: 27
+  week_length: 7
+  include_pre_start: true
+  early_window:
+  - 1
+  - 2
+  late_window:
+  - 3
+  - 4
+label:
+  positive_results:
+  - Fail
+  - Withdrawn
+  negative_results:
+  - Pass
+  - Distinction
+fairness:
+  sensitive_attributes:
+  - gender
+  - region
+  - disability
+  - age_band
+  - imd_band
+  - highest_education
+  min_group_size: 10
+acceptance:
+  recall_min: 0.8
+  f1_min: 0.75
+advisor:
+  k_per_advisor: 35
+  n_advisors: 2
+  alert_shares:
+  - 0.1
+  - 0.2
+  - 0.3
+  tiers:
+    very_high: 0.9
+    high: 0.75
+kg:
+  concept_map: kg/concept_map.csv
+  concepts: kg/concepts.yaml
+  pass_threshold: 40

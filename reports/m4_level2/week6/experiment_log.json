@@ -1,6 +1,6 @@
 {
   "tag": "week6",
-  "started": "2026-11-12 22:33:11",
+  "started": "2026-11-13 16:31:49",
   "seed": 42,
   "python": "3.12.3",
   "sklearn": "1.9.1",
@@ -11,10 +11,17 @@
   "features_sha256": "6034d0036d1ff11d140c9ea5f2628a8c1cf08d6ac14f0b2c5ed862a4cd490618",
   "cutoff_day": 41,
   "n_features": 34,
+  "leakage_check": "assert_no_leakage: đạt",
   "n": {
     "train": 3383,
     "valid": 1283,
     "test": 1834
+  },
+  "module": "FFF",
+  "presentations": {
+    "train": "2013B + 2013J",
+    "valid": "2014B",
+    "test": "2014J"
   },
   "n_pos": {
     "train": 1506,
@@ -29,6 +36,7 @@
     "share_missing",
     "first_assess_missing"
   ],
+  "rule_defined": true,
   "lr_grid": [
     {
       "C": 0.001,
@@ -203,7 +211,7 @@
     ],
     "rule": "giữ gradient boosting chỉ khi khoảng tin cậy của chênh lệch nằm trên 0",
     "chosen": "logistic regression",
-    "decided_at": "2026-11-12 22:33:14"
+    "decided_at": "2026-11-13 16:31:51"
   },
   "train_vs_valid": {
     "gb": {
@@ -231,7 +239,7 @@
     "lr_parameters": 35,
     "lr_grid_configs": 5
   },
-  "finished_core": "2026-11-12 22:33:17",
+  "finished_core": "2026-11-13 16:31:54",
   "error_test": {
     "FN_total": 116,
     "FN_fail": 58,
@@ -269,10 +277,32 @@
       ]
     }
   },
+  "aq10_outside_k": {
+    "in_top70": {
+      "n": 66,
+      "tma1_missing_share": 0.9090909090909091,
+      "median_clicks_total": 0.0,
+      "median_tma1_score": 37.0
+    },
+    "outside_top70": {
+      "n": 651,
+      "tma1_missing_share": 0.16129032258064516,
+      "median_clicks_total": 338.0,
+      "median_tma1_score": 76.0
+    }
+  },
+  "lr_rank_stability": {
+    "spearman_median": 0.7617737003058104,
+    "spearman_ci": [
+      0.49475435578975385,
+      0.894197247706422
+    ],
+    "top5_overlap_mean": 3.438
+  },
   "top70_test": {
     "tma1_missing_share": 0.9,
     "idle_share": 0.2714285714285714,
     "median_clicks_total": 0.0
   },
-  "finished": "2026-11-12 22:33:40"
+  "finished": "2026-11-13 16:32:18"
 }
